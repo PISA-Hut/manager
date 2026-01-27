@@ -1,3 +1,4 @@
+use crate::entity::sea_orm_active_enums::TaskStatus;
 use crate::entity::task;
 use chrono::Utc;
 use sea_orm::*;
@@ -14,7 +15,7 @@ pub async fn create(
     let active = task::ActiveModel {
         plan_id: Set(plan_id),
         av_id: Set(av_id),
-        status: Set(Some("created".to_string())),
+        status: Set(TaskStatus::Pending),
         ..Default::default()
     };
 
@@ -40,8 +41,8 @@ pub async fn claim_one_unassigned(
 
                 let mut active: task::ActiveModel = task.into();
                 active.worker_id = Set(Some(worker_id));
-                active.status = Set(Some("running".to_string()));
-                active.executed_at = Set(Some(Utc::now()));
+                active.status = Set(TaskStatus::InProgress);
+                active.executed_at = Set(Some(Utc::now().fixed_offset()));
 
                 let updated = active.update(txn).await?;
                 Ok(Some(updated))
@@ -67,8 +68,8 @@ pub async fn complete_task(
     };
 
     let mut active: task::ActiveModel = task.into();
-    active.status = Set(Some("completed".to_string()));
-    active.finished_at = Set(Some(Utc::now()));
+    active.status = Set(TaskStatus::Completed);
+    active.finished_at = Set(Some(Utc::now().fixed_offset()));
 
     let updated = active.update(db).await?;
     Ok(Some(updated))

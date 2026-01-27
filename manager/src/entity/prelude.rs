@@ -3,6 +3,8 @@
 pub use super::av::Entity as Av;
 pub use super::map::Entity as Map;
 pub use super::plan::Entity as Plan;
+pub use super::sampler::Entity as Sampler;
 pub use super::scenario::Entity as Scenario;
+pub use super::simulator::Entity as Simulator;
 pub use super::task::Entity as Task;
 pub use super::worker::Entity as Worker;

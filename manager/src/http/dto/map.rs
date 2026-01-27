@@ -4,18 +4,16 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize)]
 pub struct CreateMapRequest {
     pub name: String,
-    pub xodr: bool,
-    pub osm: bool,
-    pub path: String,
+    pub xodr_path: Option<String>,
+    pub osm_path: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct MapResponse {
     pub id: i32,
     pub name: String,
-    pub xodr: bool,
-    pub osm: bool,
-    pub path: String,
+    pub xodr_path: Option<String>,
+    pub osm_path: Option<String>,
 }
 
 impl From<map::Model> for MapResponse {
@@ -23,9 +21,8 @@ impl From<map::Model> for MapResponse {
         Self {
             id: m.id,
             name: m.name,
-            xodr: m.xodr,
-            osm: m.osm,
-            path: m.path,
+            xodr_path: m.xodr_path,
+            osm_path: m.osm_path,
         }
     }
 }

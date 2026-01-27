@@ -8,15 +8,13 @@ pub async fn find_all(db: &DatabaseConnection) -> Result<Vec<map::Model>, DbErr>
 pub async fn create(
     db: &DatabaseConnection,
     name: String,
-    xodr: bool,
-    osm: bool,
-    path: String,
+    xodr_path: Option<String>,
+    osm_path: Option<String>,
 ) -> Result<map::Model, DbErr> {
     let active = map::ActiveModel {
         name: Set(name),
-        xodr: Set(xodr),
-        osm: Set(osm),
-        path: Set(path),
+        xodr_path: Set(xodr_path),
+        osm_path: Set(osm_path),
         ..Default::default()
     };
 

@@ -20,15 +20,9 @@ pub async fn create_map(
     State(state): State<AppState>,
     Json(payload): Json<CreateMapRequest>,
 ) -> Result<Json<MapResponse>, StatusCode> {
-    let map = db::map::create(
-        &state.db,
-        payload.name,
-        payload.xodr,
-        payload.osm,
-        payload.path,
-    )
-    .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let map = db::map::create(&state.db, payload.name, payload.xodr_path, payload.osm_path)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(Json(MapResponse::from(map)))
 }
