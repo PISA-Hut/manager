@@ -25,5 +25,9 @@ pub fn create_router(state: AppState) -> Router {
             "/worker",
             get(handlers::worker::list_workers).post(handlers::worker::create_worker),
         )
+        .route(
+            "/plan",
+            get(handlers::plan::list_plans).post(handlers::plan::create_plan),
+        )
         .with_state(state)
 }
