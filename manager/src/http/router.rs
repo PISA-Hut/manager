@@ -1,4 +1,7 @@
-use axum::{Router, routing::get};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 
 use crate::{app_state::AppState, http::handlers};
 
@@ -30,5 +33,7 @@ pub fn create_router(state: AppState) -> Router {
             "/task",
             get(handlers::task::list_tasks).post(handlers::task::create_task),
         )
+        .route("/task/claim", post(handlers::task::claim_task))
+        .route("/task/complete", post(handlers::task::complete_task))
         .with_state(state)
 }

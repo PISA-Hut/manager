@@ -34,3 +34,13 @@ impl From<task::Model> for TaskResponse {
         }
     }
 }
+
+#[derive(Debug, Deserialize)]
+pub struct ClaimTaskRequest {
+    pub worker_id: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CompleteTaskRequest {
+    pub task_id: i32,
+}

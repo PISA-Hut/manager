@@ -3,7 +3,7 @@ use axum::{Json, extract::State, http::StatusCode};
 use crate::{
     app_state::AppState,
     db,
-    http::dto::task::{CreateTaskRequest, TaskResponse},
+    http::dto::task::{ClaimTaskRequest, CompleteTaskRequest, CreateTaskRequest, TaskResponse},
 };
 
 pub async fn list_tasks(
@@ -39,6 +39,43 @@ pub async fn create_task(
     let task = db::task::create(&state.db, payload.plan_id, payload.av_id)
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
+
+    Ok(Json(TaskResponse::from(task)))
+}
+
+pub async fn claim_task(
+    State(state): State<AppState>,
+    Json(payload): Json<ClaimTaskRequest>,
+) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
+    // Validate worker exists
+    if !db::worker::worker_exists(&state.db, payload.worker_id)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
+    {
+        return Err((StatusCode::BAD_REQUEST, "Worker does not exist"));
+    }
+
+    let task = db::task::claim_one_unassigned(&state.db, payload.worker_id)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
+
+    match task {
+        Some(t) => Ok(Json(TaskResponse::from(t))),
+        None => Err((StatusCode::NOT_FOUND, "No unassigned tasks available")),
+    }
+}
+
+pub async fn complete_task(
+    State(state): State<AppState>,
+    Json(payload): Json<CompleteTaskRequest>,
+) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
+    let task = db::task::complete_task(&state.db, payload.task_id)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
+
+    let Some(task) = task else {
+        return Err((StatusCode::BAD_REQUEST, "Task does not exist"));
+    };
 
     Ok(Json(TaskResponse::from(task)))
 }
