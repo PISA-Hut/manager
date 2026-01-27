@@ -7,7 +7,7 @@ use crate::{
     http::dto::av::{AvResponse, CreateAvRequest},
 };
 
-pub async fn list_av(State(state): State<AppState>) -> Result<Json<Vec<AvResponse>>, StatusCode> {
+pub async fn list_avs(State(state): State<AppState>) -> Result<Json<Vec<AvResponse>>, StatusCode> {
     let avs: Vec<av::Model> = db::av::find_all(&state.db)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
