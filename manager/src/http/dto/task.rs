@@ -33,13 +33,9 @@ impl From<task::Model> for TaskResponse {
             sampler_id: m.sampler_id,
             worker_id: m.worker_id,
             status: ActiveEnum::to_value(&m.status),
-            created_at: DateTime::<Utc>::from_naive_utc_and_offset(m.created_at, Utc),
-            executed_at: m
-                .executed_at
-                .map(|dt| DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc)),
-            finished_at: m
-                .finished_at
-                .map(|dt| DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc)),
+            created_at: m.created_at.with_timezone(&Utc),
+            executed_at: m.executed_at.map(|dt| dt.with_timezone(&Utc)),
+            finished_at: m.finished_at.map(|dt| dt.with_timezone(&Utc)),
         }
     }
 }

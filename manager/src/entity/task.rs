@@ -12,9 +12,9 @@ pub struct Model {
     pub av_id: i32,
     pub worker_id: Option<i32>,
     pub status: TaskStatus,
-    pub created_at: DateTime,
-    pub executed_at: Option<DateTime>,
-    pub finished_at: Option<DateTime>,
+    pub created_at: DateTimeWithTimeZone,
+    pub executed_at: Option<DateTimeWithTimeZone>,
+    pub finished_at: Option<DateTimeWithTimeZone>,
     pub simulator_id: i32,
     pub sampler_id: i32,
 }
