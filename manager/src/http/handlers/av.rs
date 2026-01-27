@@ -4,7 +4,7 @@ use crate::{
     app_state::AppState,
     db,
     entity::av,
-    http::dto::av::{AvResponse, CompleteAvRequest, CreateAvRequest},
+    http::dto::av::{AvResponse, CreateAvRequest},
 };
 
 pub async fn list_av(State(state): State<AppState>) -> Result<Json<Vec<AvResponse>>, StatusCode> {
@@ -17,7 +17,7 @@ pub async fn list_av(State(state): State<AppState>) -> Result<Json<Vec<AvRespons
 
 pub async fn create_av(
     State(state): State<AppState>,
-    Json(payload): Json<crate::http::dto::av::CreateAvRequest>,
+    Json(payload): Json<CreateAvRequest>,
 ) -> Result<Json<AvResponse>, StatusCode> {
     let av_model: av::Model = db::av::create(&state.db, payload)
         .await

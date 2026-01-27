@@ -20,9 +20,3 @@ impl From<av::Model> for AvResponse {
 pub struct CreateAvRequest {
     pub name: String,
 }
-
-#[derive(Debug, Deserialize)]
-pub struct CompleteAvRequest {
-    pub name: String,
-    pub description: Option<String>,
-}
