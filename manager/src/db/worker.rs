@@ -1,5 +1,6 @@
 use crate::entity::worker;
 use sea_orm::*;
+use tracing::info;
 
 pub async fn find_all(db: &DatabaseConnection) -> Result<Vec<worker::Model>, DbErr> {
     worker::Entity::find().all(db).await
@@ -26,6 +27,6 @@ pub async fn worker_exists(db: &DatabaseConnection, worker_id: i32) -> Result<bo
         .one(db)
         .await?
         .is_some() as i64;
-
+    info!("Worker exists check for id {}: {}", worker_id, count > 0);
     Ok(count > 0)
 }

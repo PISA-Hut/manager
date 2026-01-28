@@ -19,3 +19,7 @@ pub async fn av_exists(db: &DatabaseConnection, av_id: i32) -> Result<bool, DbEr
 
     Ok(count > 0)
 }
+
+pub async fn get_by_id(db: &DatabaseConnection, av_id: i32) -> Result<Option<av::Model>, DbErr> {
+    av::Entity::find_by_id(av_id).one(db).await
+}

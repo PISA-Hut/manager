@@ -26,7 +26,7 @@ pub async fn create(
     active.insert(db).await
 }
 
-pub async fn claim_one_unassigned(
+pub async fn claim_task(
     db: &DatabaseConnection,
     worker_id: i32,
 ) -> Result<Option<task::Model>, DbErr> {
@@ -35,6 +35,7 @@ pub async fn claim_one_unassigned(
             Box::pin(async move {
                 let task = task::Entity::find()
                     .filter(task::Column::WorkerId.is_null())
+                    .filter(task::Column::Status.eq(TaskStatus::Pending))
                     .order_by_asc(task::Column::Id)
                     .one(txn)
                     .await?;

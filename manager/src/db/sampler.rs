@@ -27,3 +27,10 @@ pub async fn sampler_exists(db: &DatabaseConnection, sampler_id: i32) -> Result<
 
     Ok(count > 0)
 }
+
+pub async fn get_by_id(
+    db: &DatabaseConnection,
+    sampler_id: i32,
+) -> Result<Option<sampler::Model>, DbErr> {
+    sampler::Entity::find_by_id(sampler_id).one(db).await
+}

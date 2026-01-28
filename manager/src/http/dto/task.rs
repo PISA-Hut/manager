@@ -1,7 +1,12 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::entity::task;
+use crate::{
+    entity::task,
+    http::dto::{
+        av::AvResponse, plan::PlanResponse, sampler::SamplerResponse, simulator::SimulatorResponse,
+    },
+};
 
 #[derive(Debug, Deserialize)]
 pub struct CreateTaskRequest {
@@ -59,4 +64,13 @@ pub enum TaskStatusDto {
     InProgress,
     Completed,
     Failed,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ClaimTaskResponse {
+    pub task: TaskResponse,
+    pub plan: PlanResponse,
+    pub av: AvResponse,
+    pub simulator: SimulatorResponse,
+    pub sampler: SamplerResponse,
 }

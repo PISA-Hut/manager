@@ -27,3 +27,10 @@ pub async fn simulator_exists(db: &DatabaseConnection, simulator_id: i32) -> Res
 
     Ok(count > 0)
 }
+
+pub async fn get_by_id(
+    db: &DatabaseConnection,
+    simulator_id: i32,
+) -> Result<Option<simulator::Model>, DbErr> {
+    simulator::Entity::find_by_id(simulator_id).one(db).await
+}

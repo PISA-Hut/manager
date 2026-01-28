@@ -26,3 +26,10 @@ pub async fn plan_exists(db: &DatabaseConnection, plan_id: i32) -> Result<bool, 
 
     Ok(count > 0)
 }
+
+pub async fn get_by_id(
+    db: &DatabaseConnection,
+    plan_id: i32,
+) -> Result<Option<plan::Model>, DbErr> {
+    plan::Entity::find_by_id(plan_id).one(db).await
+}
