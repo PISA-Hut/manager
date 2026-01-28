@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct AvResponse {
     pub id: i32,
     pub name: String,
+    pub config_path: String,
 }
 
 impl From<av::Model> for AvResponse {
@@ -12,6 +13,7 @@ impl From<av::Model> for AvResponse {
         Self {
             id: m.id,
             name: m.name,
+            config_path: m.config_path,
         }
     }
 }
@@ -19,4 +21,5 @@ impl From<av::Model> for AvResponse {
 #[derive(Debug, Deserialize)]
 pub struct CreateAvRequest {
     pub name: String,
+    pub config_path: String,
 }
