@@ -6,6 +6,7 @@ pub struct AvResponse {
     pub id: i32,
     pub name: String,
     pub config_path: String,
+    pub module_path: String,
 }
 
 impl From<av::Model> for AvResponse {
@@ -14,6 +15,7 @@ impl From<av::Model> for AvResponse {
             id: m.id,
             name: m.name,
             config_path: m.config_path,
+            module_path: m.module_path,
         }
     }
 }
@@ -22,12 +24,14 @@ impl From<av::Model> for AvResponse {
 pub struct CreateAvRequest {
     pub name: String,
     pub config_path: String,
+    pub module_path: String,
 }
 
 #[derive(Debug, Serialize)]
 pub struct AvExecutionDto {
     pub name: String,
     pub config_path: String,
+    pub module_path: String,
 }
 
 impl From<av::Model> for AvExecutionDto {
@@ -35,6 +39,7 @@ impl From<av::Model> for AvExecutionDto {
         Self {
             name: m.name,
             config_path: m.config_path,
+            module_path: m.module_path,
         }
     }
 }

@@ -9,10 +9,12 @@ pub async fn create(
     db: &DatabaseConnection,
     name: String,
     config_path: String,
+    module_path: String,
 ) -> Result<av::Model, DbErr> {
     let active = av::ActiveModel {
         name: Set(name),
         config_path: Set(config_path),
+        module_path: Set(module_path),
         ..Default::default()
     };
 

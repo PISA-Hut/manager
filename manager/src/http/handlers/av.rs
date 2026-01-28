@@ -16,9 +16,14 @@ pub async fn create_av(
     State(state): State<AppState>,
     Json(payload): Json<CreateAvRequest>,
 ) -> Result<Json<AvResponse>, StatusCode> {
-    let av_model = db::av::create(&state.db, payload.name, payload.config_path)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let av_model = db::av::create(
+        &state.db,
+        payload.name,
+        payload.config_path,
+        payload.module_path,
+    )
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(Json(AvResponse::from(av_model)))
 }
