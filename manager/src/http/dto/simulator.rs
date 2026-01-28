@@ -23,3 +23,18 @@ impl From<simulator::Model> for SimulatorResponse {
         }
     }
 }
+
+#[derive(Debug, Serialize)]
+pub struct SimulatorExecutionDto {
+    pub name: String,
+    pub module_path: String,
+}
+
+impl From<simulator::Model> for SimulatorExecutionDto {
+    fn from(m: simulator::Model) -> Self {
+        Self {
+            name: m.name,
+            module_path: m.module_path,
+        }
+    }
+}

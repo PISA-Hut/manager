@@ -4,11 +4,14 @@ use sea_orm::DbErr;
 use crate::app_state::AppState;
 use crate::db;
 use crate::entity::sea_orm_active_enums::TaskStatus as DbTaskStatus;
-use crate::entity::{av, map, plan, sampler, simulator, task};
-use crate::http::dto::{
-    av::AvResponse, map::MapResponse, plan::PlanResponse, sampler::SamplerResponse,
-    simulator::SimulatorResponse, task::ClaimTaskResponse, task::TaskResponse, task::TaskStatusDto,
-};
+use crate::entity::{av, map, sampler, scenario, simulator, task};
+use crate::http::dto::av::AvExecutionDto;
+use crate::http::dto::map::MapExecutionDto;
+use crate::http::dto::sampler::SamplerExecutionDto;
+use crate::http::dto::scenario::ScenarioExecutionDto;
+use crate::http::dto::simulator::SimulatorExecutionDto;
+use crate::http::dto::task::TaskStatusDto;
+use crate::http::dto::task::{ClaimTaskResponse, TaskExecutionDto};
 
 impl From<DbTaskStatus> for TaskStatusDto {
     fn from(value: DbTaskStatus) -> Self {
@@ -47,9 +50,9 @@ impl From<DbErr> for TaskServiceError {
 
 pub struct ResolvedTask {
     pub task: task::Model,
-    pub plan: plan::Model,
     pub av: av::Model,
     pub map: map::Model,
+    pub scenario: scenario::Model,
     pub simulator: simulator::Model,
     pub sampler: sampler::Model,
 }
@@ -70,12 +73,12 @@ pub async fn claim_task_for_worker(
     };
 
     Ok(Some(ClaimTaskResponse {
-        task: TaskResponse::from(resolved.task),
-        plan: PlanResponse::from(resolved.plan),
-        av: AvResponse::from(resolved.av),
-        simulator: SimulatorResponse::from(resolved.simulator),
-        sampler: SamplerResponse::from(resolved.sampler),
-        map: MapResponse::from(resolved.map),
+        task: TaskExecutionDto::from(resolved.task),
+        av: AvExecutionDto::from(resolved.av),
+        simulator: SimulatorExecutionDto::from(resolved.simulator),
+        scenario: ScenarioExecutionDto::from(resolved.scenario),
+        sampler: SamplerExecutionDto::from(resolved.sampler),
+        map: MapExecutionDto::from(resolved.map),
     }))
 }
 
@@ -101,15 +104,18 @@ async fn claim_and_resolve_task(
     let simulator = db::simulator::get_by_id(&state.db, task.simulator_id)
         .await?
         .ok_or(TaskServiceError::DataInconsistency("simulator not found"))?;
+    let scenario = db::scenario::get_by_id(&state.db, plan.scenario_id)
+        .await?
+        .ok_or(TaskServiceError::DataInconsistency("scenario not found"))?;
     let sampler = db::sampler::get_by_id(&state.db, task.sampler_id)
         .await?
         .ok_or(TaskServiceError::DataInconsistency("sampler not found"))?;
 
     Ok(Some(ResolvedTask {
         task,
-        plan,
         av,
         map,
+        scenario,
         simulator,
         sampler,
     }))

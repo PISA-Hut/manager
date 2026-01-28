@@ -1,12 +1,10 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    entity::task,
-    http::dto::{
-        av::AvResponse, map::MapResponse, plan::PlanResponse, sampler::SamplerResponse,
-        simulator::SimulatorResponse,
-    },
+use crate::entity::task;
+use crate::http::dto::{
+    av::AvExecutionDto, map::MapExecutionDto, sampler::SamplerExecutionDto,
+    scenario::ScenarioExecutionDto, simulator::SimulatorExecutionDto,
 };
 
 #[derive(Debug, Deserialize)]
@@ -69,10 +67,21 @@ pub enum TaskStatusDto {
 
 #[derive(Debug, Serialize)]
 pub struct ClaimTaskResponse {
-    pub task: TaskResponse,
-    pub plan: PlanResponse,
-    pub av: AvResponse,
-    pub map: MapResponse,
-    pub simulator: SimulatorResponse,
-    pub sampler: SamplerResponse,
+    pub task: TaskExecutionDto,
+    pub av: AvExecutionDto,
+    pub map: MapExecutionDto,
+    pub scenario: ScenarioExecutionDto,
+    pub simulator: SimulatorExecutionDto,
+    pub sampler: SamplerExecutionDto,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TaskExecutionDto {
+    pub id: i32,
+}
+
+impl From<task::Model> for TaskExecutionDto {
+    fn from(m: task::Model) -> Self {
+        Self { id: m.id }
+    }
 }

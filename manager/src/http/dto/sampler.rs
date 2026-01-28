@@ -23,3 +23,18 @@ pub struct CreateSamplerRequest {
     pub name: String,
     pub module_path: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct SamplerExecutionDto {
+    pub name: String,
+    pub module_path: String,
+}
+
+impl From<sampler::Model> for SamplerExecutionDto {
+    fn from(m: sampler::Model) -> Self {
+        Self {
+            name: m.name,
+            module_path: m.module_path,
+        }
+    }
+}

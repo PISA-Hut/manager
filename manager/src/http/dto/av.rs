@@ -23,3 +23,18 @@ pub struct CreateAvRequest {
     pub name: String,
     pub config_path: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct AvExecutionDto {
+    pub name: String,
+    pub config_path: String,
+}
+
+impl From<av::Model> for AvExecutionDto {
+    fn from(m: av::Model) -> Self {
+        Self {
+            name: m.name,
+            config_path: m.config_path,
+        }
+    }
+}
