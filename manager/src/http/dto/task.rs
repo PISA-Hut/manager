@@ -1,7 +1,8 @@
-use crate::entity::task;
 use chrono::{DateTime, Utc};
-use sea_orm::ActiveEnum;
 use serde::{Deserialize, Serialize};
+
+use crate::entity::sea_orm_active_enums::TaskStatus;
+use crate::entity::task;
 
 #[derive(Debug, Deserialize)]
 pub struct CreateTaskRequest {
@@ -17,7 +18,7 @@ pub struct TaskResponse {
     pub simulator_id: i32,
     pub sampler_id: i32,
     pub worker_id: Option<i32>,
-    pub status: String,
+    pub status: TaskStatusDto,
     pub created_at: DateTime<Utc>,
     pub executed_at: Option<DateTime<Utc>>,
     pub finished_at: Option<DateTime<Utc>>,
@@ -25,6 +26,13 @@ pub struct TaskResponse {
 
 impl From<task::Model> for TaskResponse {
     fn from(m: task::Model) -> Self {
+        let status = match m.status {
+            TaskStatus::Pending => "pending",
+            TaskStatus::InProgress => "in_progress",
+            TaskStatus::Completed => "completed",
+            TaskStatus::Failed => "failed",
+        };
+
         Self {
             id: m.id,
             plan_id: m.plan_id,
@@ -32,7 +40,7 @@ impl From<task::Model> for TaskResponse {
             simulator_id: m.simulator_id,
             sampler_id: m.sampler_id,
             worker_id: m.worker_id,
-            status: ActiveEnum::to_value(&m.status),
+            status: TaskStatusDto::from(m.status),
             created_at: m.created_at.with_timezone(&Utc),
             executed_at: m.executed_at.map(|dt| dt.with_timezone(&Utc)),
             finished_at: m.finished_at.map(|dt| dt.with_timezone(&Utc)),
@@ -48,4 +56,13 @@ pub struct ClaimTaskRequest {
 #[derive(Debug, Deserialize)]
 pub struct CompleteTaskRequest {
     pub task_id: i32,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TaskStatusDto {
+    Pending,
+    InProgress,
+    Completed,
+    Failed,
 }

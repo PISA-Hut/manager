@@ -3,6 +3,7 @@ mod db;
 mod entity;
 mod http;
 mod migrator;
+mod service;
 
 use crate::app_state::AppState;
 
