@@ -41,11 +41,19 @@ pub async fn create_task(
         return Err((StatusCode::BAD_REQUEST, "Sampler does not exist"));
     }
 
+    if !db::simulator::simulator_exists(&state.db, payload.simulator_id)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
+    {
+        return Err((StatusCode::BAD_REQUEST, "Simulator does not exist"));
+    }
+
     let task = db::task::create(
         &state.db,
         payload.plan_id,
         payload.av_id,
         payload.sampler_id,
+        payload.simulator_id,
     )
     .await
     .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;

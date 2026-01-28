@@ -8,6 +8,7 @@ pub struct CreateTaskRequest {
     pub plan_id: i32,
     pub av_id: i32,
     pub sampler_id: i32,
+    pub simulator_id: i32,
 }
 
 #[derive(Debug, Serialize)]

@@ -30,6 +30,10 @@ pub fn create_router(state: AppState) -> Router {
             get(handlers::scenario::list_scenarios).post(handlers::scenario::create_scenario),
         )
         .route(
+            "/simulator",
+            get(handlers::simulator::list_simulators).post(handlers::simulator::create_simulator),
+        )
+        .route(
             "/task",
             get(handlers::task::list_tasks).post(handlers::task::create_task),
         )
