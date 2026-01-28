@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct CreateScenarioRequest {
     pub title: String,
     pub scenario_path: String,
-    pub param_path: Option<String>,
+    pub param_path: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -13,7 +13,7 @@ pub struct ScenarioResponse {
     pub id: i32,
     pub title: String,
     pub scenario_path: String,
-    pub param_path: Option<String>,
+    pub param_path: String,
 }
 
 impl From<scenario::Model> for ScenarioResponse {
@@ -31,7 +31,7 @@ impl From<scenario::Model> for ScenarioResponse {
 pub struct ScenarioExecutionDto {
     pub title: String,
     pub scenario_path: String,
-    pub param_path: Option<String>,
+    pub param_path: String,
 }
 
 impl From<scenario::Model> for ScenarioExecutionDto {

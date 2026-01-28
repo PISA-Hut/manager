@@ -8,6 +8,8 @@ mod m20260127_232346_add_simulator_sampler;
 mod m20260128_003656_alter_map_path;
 mod m20260128_003656_alter_timestamp_zone;
 mod m20260128_221408_rename_scenario_path_add_param_path;
+mod m20260128_222459_add_simulator_config_path;
+mod m20260128_224021_make_paths_not_null;
 
 pub struct Migrator;
 
@@ -21,6 +23,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260128_003656_alter_map_path::Migration),
             Box::new(m20260128_003656_alter_timestamp_zone::Migration),
             Box::new(m20260128_221408_rename_scenario_path_add_param_path::Migration),
+            Box::new(m20260128_222459_add_simulator_config_path::Migration),
+            Box::new(m20260128_224021_make_paths_not_null::Migration),
         ]
     }
 }

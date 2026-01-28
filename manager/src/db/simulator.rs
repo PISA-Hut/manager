@@ -8,10 +8,12 @@ pub async fn find_all(db: &DatabaseConnection) -> Result<Vec<simulator::Model>, 
 pub async fn create(
     db: &DatabaseConnection,
     name: String,
+    config_path: String,
     module_path: String,
 ) -> Result<simulator::Model, DbErr> {
     let active = simulator::ActiveModel {
         name: Set(name),
+        config_path: Set(config_path),
         module_path: Set(module_path),
         ..Default::default()
     };

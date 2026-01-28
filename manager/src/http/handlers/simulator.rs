@@ -23,9 +23,14 @@ pub async fn create_simulator(
     State(state): State<AppState>,
     Json(payload): Json<CreateSimulatorRequest>,
 ) -> Result<Json<SimulatorResponse>, StatusCode> {
-    let simulator_model = db::simulator::create(&state.db, payload.name, payload.module_path)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let simulator_model = db::simulator::create(
+        &state.db,
+        payload.name,
+        payload.config_path,
+        payload.module_path,
+    )
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(Json(SimulatorResponse::from(simulator_model)))
 }
