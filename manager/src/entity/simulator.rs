@@ -9,7 +9,7 @@ pub struct Model {
     pub id: i32,
     pub name: String,
     pub module_path: String,
-    pub config_path: Option<String>,
+    pub config_path: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

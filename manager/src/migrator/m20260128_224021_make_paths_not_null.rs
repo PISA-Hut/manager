@@ -4,7 +4,7 @@ pub struct Migration;
 
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20260128_222459_add_simulator_config_path"
+        "m20260128_224021_add_simulator_config_path"
     }
 }
 
@@ -25,6 +25,7 @@ impl MigrationTrait for Migration {
                 Table::alter()
                     .table(Scenario::Table)
                     .modify_column(ColumnDef::new(Scenario::ParamPath).string().not_null())
+                    .modify_column(ColumnDef::new(Scenario::ScenarioPath).string().not_null())
                     .to_owned(),
             )
             .await?;
@@ -47,6 +48,7 @@ impl MigrationTrait for Migration {
                 Table::alter()
                     .table(Scenario::Table)
                     .modify_column(ColumnDef::new(Scenario::ParamPath).string().null())
+                    .modify_column(ColumnDef::new(Scenario::ScenarioPath).string().null())
                     .to_owned(),
             )
             .await?;
@@ -63,5 +65,6 @@ enum Simulator {
 #[derive(Iden)]
 enum Scenario {
     Table,
+    ScenarioPath,
     ParamPath,
 }

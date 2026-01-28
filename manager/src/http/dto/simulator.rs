@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize)]
 pub struct CreateSimulatorRequest {
     pub name: String,
-    pub config_path: Option<String>,
+    pub config_path: String,
     pub module_path: String,
 }
 
@@ -12,7 +12,7 @@ pub struct CreateSimulatorRequest {
 pub struct SimulatorResponse {
     pub id: i32,
     pub name: String,
-    pub config_path: Option<String>,
+    pub config_path: String,
     pub module_path: String,
 }
 
@@ -30,7 +30,7 @@ impl From<simulator::Model> for SimulatorResponse {
 #[derive(Debug, Serialize)]
 pub struct SimulatorExecutionDto {
     pub name: String,
-    pub config_path: Option<String>,
+    pub config_path: String,
     pub module_path: String,
 }
 

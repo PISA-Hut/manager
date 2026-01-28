@@ -9,7 +9,7 @@ pub async fn create(
     db: &DatabaseConnection,
     title: String,
     scenario_path: String,
-    param_path: Option<String>,
+    param_path: String,
 ) -> Result<scenario::Model, DbErr> {
     let active = scenario::ActiveModel {
         title: Set(title),
