@@ -23,6 +23,7 @@ pub async fn create_scenario(
     let scenario = db::scenario::create(
         &state.db,
         payload.title,
+        payload.description,
         payload.scenario_path,
         payload.param_path,
     )

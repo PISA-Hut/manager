@@ -26,8 +26,9 @@ pub async fn create_simulator(
     let simulator_model = db::simulator::create(
         &state.db,
         payload.name,
+        payload.image_path,
         payload.config_path,
-        payload.module_path,
+        payload.nv_runtime,
     )
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;

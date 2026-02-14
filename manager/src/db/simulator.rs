@@ -8,13 +8,15 @@ pub async fn find_all(db: &DatabaseConnection) -> Result<Vec<simulator::Model>, 
 pub async fn create(
     db: &DatabaseConnection,
     name: String,
+    image_path: String,
     config_path: String,
-    module_path: String,
+    nv_runtime: bool,
 ) -> Result<simulator::Model, DbErr> {
     let active = simulator::ActiveModel {
         name: Set(name),
+        image_path: Set(image_path),
         config_path: Set(config_path),
-        module_path: Set(module_path),
+        nv_runtime: Set(nv_runtime),
         ..Default::default()
     };
 
