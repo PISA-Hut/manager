@@ -1,4 +1,4 @@
-// src/migrator/m20220602_000001_create_bakery_table.rs (create new file)
+// src/migrator/m20260214_163021_new_db_schema.rs (create new file)
 
 use sea_orm::ActiveEnum;
 use sea_orm::{DbBackend, Schema};
@@ -10,7 +10,7 @@ pub struct Migration;
 
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20260127_225907_create_table"
+        "m20260214_163021_new_db_schema"
     }
 }
 
@@ -34,6 +34,7 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+
         manager
             .create_table(
                 Table::create()
@@ -46,9 +47,18 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(AV::Name).string().not_null())
+                    .col(ColumnDef::new(AV::ImagePath).string().not_null())
+                    .col(ColumnDef::new(AV::ConfigPath).string().not_null())
+                    .col(
+                        ColumnDef::new(AV::NvRuntime)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
                     .to_owned(),
             )
             .await?;
+
         manager
             .create_table(
                 Table::create()
@@ -60,12 +70,14 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Scenario::Title).string().not_null())
-                    .col(ColumnDef::new(Scenario::Description).string())
-                    .col(ColumnDef::new(Scenario::Path).string().not_null())
+                    .col(ColumnDef::new(Scenario::Title).string().null())
+                    .col(ColumnDef::new(Scenario::Description).string().null())
+                    .col(ColumnDef::new(Scenario::ScenarioPath).string().not_null())
+                    .col(ColumnDef::new(Scenario::ParamPath).string().null())
                     .to_owned(),
             )
             .await?;
+
         manager
             .create_table(
                 Table::create()
@@ -78,12 +90,56 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Map::Name).string().not_null())
-                    .col(ColumnDef::new(Map::XODR).boolean().not_null())
-                    .col(ColumnDef::new(Map::OSM).boolean().not_null())
-                    .col(ColumnDef::new(Map::Path).string().not_null())
+                    .col(ColumnDef::new(Map::XodrPath).string().null())
+                    .col(ColumnDef::new(Map::OsmPath).string().null())
                     .to_owned(),
             )
             .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Simulator::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Simulator::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(Simulator::Name).string().not_null())
+                    .col(ColumnDef::new(Simulator::ImagePath).string().not_null())
+                    .col(ColumnDef::new(Simulator::ConfigPath).string().not_null())
+                    .col(
+                        ColumnDef::new(Simulator::NvRuntime)
+                            .boolean()
+                            .not_null()
+                            .default(false),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Sampler::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Sampler::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(Sampler::Name).string().not_null())
+                    .col(ColumnDef::new(Sampler::ModulePath).string().not_null())
+                    .col(ColumnDef::new(Sampler::ConfigPath).string().null())
+                    .to_owned(),
+            )
+            .await?;
+
         manager
             .create_table(
                 Table::create()
@@ -111,10 +167,12 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+
         let schema = Schema::new(DbBackend::Postgres);
         manager
             .create_type(schema.create_enum_from_active_enum::<TaskStatus>())
             .await?;
+
         manager
             .create_table(
                 Table::create()
@@ -128,6 +186,8 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Task::PlanId).integer().not_null())
                     .col(ColumnDef::new(Task::AvId).integer().not_null())
+                    .col(ColumnDef::new(Task::SimulatorId).integer().not_null())
+                    .col(ColumnDef::new(Task::SamplerId).integer().not_null())
                     .col(ColumnDef::new(Task::WorkerId).integer().null())
                     .col(
                         ColumnDef::new(Task::Status)
@@ -136,12 +196,20 @@ impl MigrationTrait for Migration {
                     )
                     .col(
                         ColumnDef::new(Task::CreatedAt)
-                            .timestamp()
+                            .timestamp_with_time_zone()
                             .not_null()
                             .default(Expr::current_timestamp()),
                     )
-                    .col(ColumnDef::new(Task::ExecutedAt).timestamp())
-                    .col(ColumnDef::new(Task::FinishedAt).timestamp())
+                    .col(
+                        ColumnDef::new(Task::ExecutedAt)
+                            .timestamp_with_time_zone()
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(Task::FinishedAt)
+                            .timestamp_with_time_zone()
+                            .null(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .from(Task::Table, Task::PlanId)
@@ -157,9 +225,20 @@ impl MigrationTrait for Migration {
                             .from(Task::Table, Task::WorkerId)
                             .to(Worker::Table, Worker::Id),
                     )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(Task::Table, Task::SimulatorId)
+                            .to(Simulator::Table, Simulator::Id),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(Task::Table, Task::SamplerId)
+                            .to(Sampler::Table, Sampler::Id),
+                    )
                     .to_owned(),
             )
             .await?;
+
         Ok(())
     }
 
@@ -175,6 +254,12 @@ impl MigrationTrait for Migration {
             .await?;
         manager
             .drop_table(Table::drop().table(Map::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Simulator::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Sampler::Table).to_owned())
             .await?;
         manager
             .drop_table(Table::drop().table(Plan::Table).to_owned())
@@ -200,6 +285,9 @@ enum AV {
     Table,
     Id,
     Name,
+    ImagePath,
+    ConfigPath,
+    NvRuntime,
 }
 
 #[derive(DeriveIden)]
@@ -208,7 +296,8 @@ enum Scenario {
     Id,
     Title,
     Description,
-    Path,
+    ScenarioPath,
+    ParamPath,
 }
 
 #[derive(DeriveIden)]
@@ -216,9 +305,27 @@ enum Map {
     Table,
     Id,
     Name,
-    XODR,
-    OSM,
-    Path,
+    XodrPath,
+    OsmPath,
+}
+
+#[derive(DeriveIden)]
+enum Simulator {
+    Table,
+    Id,
+    Name,
+    ImagePath,
+    ConfigPath,
+    NvRuntime,
+}
+
+#[derive(DeriveIden)]
+enum Sampler {
+    Table,
+    Id,
+    Name,
+    ModulePath,
+    ConfigPath,
 }
 
 #[derive(DeriveIden)]
@@ -236,6 +343,8 @@ enum Task {
     Id,
     PlanId,
     AvId,
+    SimulatorId,
+    SamplerId,
     WorkerId,
     Status,
     CreatedAt,

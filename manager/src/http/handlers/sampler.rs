@@ -23,8 +23,8 @@ pub async fn create_sampler(
     let sampler_model = db::sampler::create(
         &state.db,
         payload.name,
-        payload.config_path,
         payload.module_path,
+        payload.config_path,
     )
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;

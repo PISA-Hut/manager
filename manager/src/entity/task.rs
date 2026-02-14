@@ -10,13 +10,13 @@ pub struct Model {
     pub id: i32,
     pub plan_id: i32,
     pub av_id: i32,
+    pub simulator_id: i32,
+    pub sampler_id: i32,
     pub worker_id: Option<i32>,
     pub status: TaskStatus,
     pub created_at: DateTimeWithTimeZone,
     pub executed_at: Option<DateTimeWithTimeZone>,
     pub finished_at: Option<DateTimeWithTimeZone>,
-    pub simulator_id: i32,
-    pub sampler_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

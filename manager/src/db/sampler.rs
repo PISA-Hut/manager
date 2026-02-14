@@ -8,13 +8,13 @@ pub async fn find_all(db: &DatabaseConnection) -> Result<Vec<sampler::Model>, Db
 pub async fn create(
     db: &DatabaseConnection,
     name: String,
-    config_path: Option<String>,
     module_path: String,
+    config_path: Option<String>,
 ) -> Result<sampler::Model, DbErr> {
     let active = sampler::ActiveModel {
         name: Set(name),
-        config_path: Set(config_path),
         module_path: Set(module_path),
+        config_path: Set(config_path),
         ..Default::default()
     };
 

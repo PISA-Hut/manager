@@ -19,8 +19,9 @@ pub async fn create_av(
     let av_model = db::av::create(
         &state.db,
         payload.name,
+        payload.image_path,
         payload.config_path,
-        payload.module_path,
+        payload.nv_runtime,
     )
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
