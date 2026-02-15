@@ -11,6 +11,7 @@ pub struct Model {
     pub image_path: String,
     pub config_path: String,
     pub nv_runtime: bool,
+    pub extra_ports: Option<Json>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
