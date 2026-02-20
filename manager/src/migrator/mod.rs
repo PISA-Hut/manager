@@ -12,12 +12,12 @@ use sea_orm_migration::prelude::*;
 // mod m20260128_224021_make_paths_not_null;
 // mod m20260128_225731_add_av_moduel_sampler_config;
 
-mod m20260214_163021_new_db_schema;
+mod m20260220_191020_new_db_schema;
 pub struct Migrator;
 
 #[async_trait::async_trait]
 impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
-        vec![Box::new(m20260214_163021_new_db_schema::Migration)]
+        vec![Box::new(m20260220_191020_new_db_schema::Migration)]
     }
 }
