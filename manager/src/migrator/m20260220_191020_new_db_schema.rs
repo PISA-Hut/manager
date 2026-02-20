@@ -10,7 +10,7 @@ pub struct Migration;
 
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20260214_163021_new_db_schema"
+        "m20260220_191020_new_db_schema"
     }
 }
 
@@ -71,9 +71,8 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Scenario::Title).string().null())
-                    .col(ColumnDef::new(Scenario::Description).string().null())
                     .col(ColumnDef::new(Scenario::ScenarioPath).string().not_null())
-                    .col(ColumnDef::new(Scenario::ParamPath).string().null())
+                    .col(ColumnDef::new(Scenario::GoalConfig).json().not_null())
                     .to_owned(),
             )
             .await?;
@@ -296,9 +295,8 @@ enum Scenario {
     Table,
     Id,
     Title,
-    Description,
     ScenarioPath,
-    ParamPath,
+    GoalConfig,
 }
 
 #[derive(DeriveIden)]
