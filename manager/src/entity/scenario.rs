@@ -8,9 +8,8 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub title: Option<String>,
-    pub description: Option<String>,
     pub scenario_path: String,
-    pub param_path: Option<String>,
+    pub goal_config: Json,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

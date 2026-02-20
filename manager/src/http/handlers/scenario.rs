@@ -23,9 +23,8 @@ pub async fn create_scenario(
     let scenario = db::scenario::create(
         &state.db,
         payload.title,
-        payload.description,
         payload.scenario_path,
-        payload.param_path,
+        payload.goal_config,
     )
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
