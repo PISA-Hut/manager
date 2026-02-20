@@ -7,6 +7,7 @@ pub struct CreateSimulatorRequest {
     pub image_path: String,
     pub config_path: String,
     pub nv_runtime: bool,
+    pub extra_ports: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
@@ -16,6 +17,7 @@ pub struct SimulatorResponse {
     pub image_path: String,
     pub config_path: String,
     pub nv_runtime: bool,
+    pub extra_ports: Option<serde_json::Value>,
 }
 
 impl From<simulator::Model> for SimulatorResponse {
@@ -26,6 +28,7 @@ impl From<simulator::Model> for SimulatorResponse {
             image_path: m.image_path,
             config_path: m.config_path,
             nv_runtime: m.nv_runtime,
+            extra_ports: m.extra_ports,
         }
     }
 }
@@ -36,6 +39,7 @@ pub struct SimulatorExecutionDto {
     pub image_path: String,
     pub config_path: String,
     pub nv_runtime: bool,
+    pub extra_ports: Option<serde_json::Value>,
 }
 
 impl From<simulator::Model> for SimulatorExecutionDto {
@@ -45,6 +49,7 @@ impl From<simulator::Model> for SimulatorExecutionDto {
             image_path: m.image_path,
             config_path: m.config_path,
             nv_runtime: m.nv_runtime,
+            extra_ports: m.extra_ports,
         }
     }
 }

@@ -29,6 +29,7 @@ pub async fn create_simulator(
         payload.image_path,
         payload.config_path,
         payload.nv_runtime,
+        payload.extra_ports,
     )
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;

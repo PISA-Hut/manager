@@ -117,6 +117,7 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .default(false),
                     )
+                    .col(ColumnDef::new(Simulator::ExtraPorts).json().null())
                     .to_owned(),
             )
             .await?;
@@ -317,6 +318,7 @@ enum Simulator {
     ImagePath,
     ConfigPath,
     NvRuntime,
+    ExtraPorts,
 }
 
 #[derive(DeriveIden)]
