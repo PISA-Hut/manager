@@ -3,7 +3,7 @@ use axum::{Json, extract::State, http::StatusCode};
 use crate::app_state::AppState;
 use crate::db;
 use crate::http::dto::task::{
-    ClaimTaskRequest, ClaimTaskResponse, CompleteTaskRequest, CreateTaskRequest, TaskResponse,
+    ClaimTaskRequest, ClaimTaskResponse, CreateTaskRequest, FinishTaskRequest, TaskResponse,
 };
 use crate::service;
 
@@ -75,17 +75,16 @@ pub async fn claim_task(
         })
 }
 
-pub async fn complete_task(
+pub async fn finish_task(
     State(state): State<AppState>,
-    Json(payload): Json<CompleteTaskRequest>,
+    Json(payload): Json<FinishTaskRequest>,
 ) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
-    let task = db::task::complete_task(&state.db, payload.task_id)
+    service::task::finish_task(&state, payload.task_id, payload.status)
         .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
-
-    let Some(task) = task else {
-        return Err((StatusCode::BAD_REQUEST, "Task does not exist"));
-    };
-
-    Ok(Json(TaskResponse::from(task)))
+        .map(TaskResponse::from)
+        .map(Json)
+        .map_err(|e| {
+            let (status, msg): (StatusCode, &'static str) = e.into();
+            (status, msg)
+        })
 }
