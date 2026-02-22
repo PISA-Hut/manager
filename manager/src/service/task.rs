@@ -120,3 +120,41 @@ async fn claim_and_resolve_task(
         sampler,
     }))
 }
+
+pub async fn complete_task(
+    state: &AppState,
+    task_id: i32,
+) -> Result<task::Model, TaskServiceError> {
+    let updated = db::task::complete_task(&state.db, task_id, DbTaskStatus::Completed).await?;
+    let updated = match updated {
+        Some(t) => t,
+        None => return Err(TaskServiceError::NotFound("task not found")),
+    };
+
+    Ok(updated)
+}
+
+pub async fn fail_task(
+    state: &AppState,
+    task_id: i32,
+    reason: String,
+) -> Result<task::Model, TaskServiceError> {
+    println!("Failing task {} with reason: {}", task_id, reason);
+    let updated = db::task::complete_task(&state.db, task_id, DbTaskStatus::Failed).await?;
+    let updated = match updated {
+        Some(t) => t,
+        None => return Err(TaskServiceError::NotFound("task not found")),
+    };
+
+    // create a new task with same plan, av, simulator, sampler
+    db::task::create(
+        &state.db,
+        updated.plan_id,
+        updated.av_id,
+        updated.sampler_id,
+        updated.simulator_id,
+    )
+    .await?;
+
+    Ok(updated)
+}

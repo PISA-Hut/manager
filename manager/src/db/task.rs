@@ -65,6 +65,7 @@ pub async fn claim_task(
 pub async fn complete_task(
     db: &DatabaseConnection,
     task_id: i32,
+    status: TaskStatus,
 ) -> Result<Option<task::Model>, DbErr> {
     let task = task::Entity::find_by_id(task_id).one(db).await?;
 
@@ -73,7 +74,7 @@ pub async fn complete_task(
     };
 
     let mut active: task::ActiveModel = task.into();
-    active.status = Set(TaskStatus::Completed);
+    active.status = Set(status);
     active.finished_at = Set(Some(Utc::now().fixed_offset()));
 
     let updated = active.update(db).await?;

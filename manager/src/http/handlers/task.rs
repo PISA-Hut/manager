@@ -3,7 +3,8 @@ use axum::{Json, extract::State, http::StatusCode};
 use crate::app_state::AppState;
 use crate::db;
 use crate::http::dto::task::{
-    ClaimTaskRequest, ClaimTaskResponse, CompleteTaskRequest, CreateTaskRequest, TaskResponse,
+    ClaimTaskRequest, ClaimTaskResponse, CreateTaskRequest, TaskFailedRequest, TaskResponse,
+    TaskSucceededRequest,
 };
 use crate::service;
 
@@ -75,17 +76,30 @@ pub async fn claim_task(
         })
 }
 
-pub async fn complete_task(
+pub async fn task_failed(
     State(state): State<AppState>,
-    Json(payload): Json<CompleteTaskRequest>,
+    Json(payload): Json<TaskFailedRequest>,
 ) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
-    let task = db::task::complete_task(&state.db, payload.task_id)
+    service::task::fail_task(&state, payload.task_id, payload.reason)
         .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
+        .map(TaskResponse::from)
+        .map(Json)
+        .map_err(|e| {
+            let (status, msg): (StatusCode, &'static str) = e.into();
+            (status, msg)
+        })
+}
 
-    let Some(task) = task else {
-        return Err((StatusCode::BAD_REQUEST, "Task does not exist"));
-    };
-
-    Ok(Json(TaskResponse::from(task)))
+pub async fn task_succeeded(
+    State(state): State<AppState>,
+    Json(payload): Json<TaskSucceededRequest>,
+) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
+    service::task::complete_task(&state, payload.task_id)
+        .await
+        .map(TaskResponse::from)
+        .map(Json)
+        .map_err(|e| {
+            let (status, msg): (StatusCode, &'static str) = e.into();
+            (status, msg)
+        })
 }
