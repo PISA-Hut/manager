@@ -60,12 +60,17 @@ pub struct ResolvedTask {
 pub async fn claim_task_for_worker(
     state: &AppState,
     worker_id: i32,
+    plan_id: Option<i32>,
+    av_id: Option<i32>,
+    simulator_id: Option<i32>,
+    sampler_id: Option<i32>,
 ) -> Result<Option<ClaimTaskResponse>, TaskServiceError> {
     if db::worker::worker_exists(&state.db, worker_id).await? == false {
         return Err(TaskServiceError::NotFound("worker not found"));
     }
 
-    let resolved = claim_and_resolve_task(&state, worker_id).await?;
+    let resolved =
+        claim_and_resolve_task(&state, worker_id, plan_id, av_id, simulator_id, sampler_id).await?;
 
     let resolved = match resolved {
         Some(r) => r,
@@ -85,8 +90,20 @@ pub async fn claim_task_for_worker(
 async fn claim_and_resolve_task(
     state: &AppState,
     worker_id: i32,
+    plan_id: Option<i32>,
+    av_id: Option<i32>,
+    simulator_id: Option<i32>,
+    sampler_id: Option<i32>,
 ) -> Result<Option<ResolvedTask>, TaskServiceError> {
-    let task = db::task::claim_task(&state.db, worker_id).await?;
+    let task = db::task::claim_task_with_filters(
+        &state.db,
+        worker_id,
+        plan_id,
+        av_id,
+        simulator_id,
+        sampler_id,
+    )
+    .await?;
     let task = match task {
         Some(t) => t,
         None => return Ok(None),

@@ -67,13 +67,20 @@ pub async fn claim_task(
     State(state): State<AppState>,
     Json(req): Json<ClaimTaskRequest>,
 ) -> Result<Json<Option<ClaimTaskResponse>>, StatusCode> {
-    service::task::claim_task_for_worker(&state, req.worker_id)
-        .await
-        .map(Json)
-        .map_err(|e| {
-            let (status, _msg): (StatusCode, &'static str) = e.into();
-            status
-        })
+    service::task::claim_task_for_worker(
+        &state,
+        req.worker_id,
+        req.plan_id,
+        req.av_id,
+        req.simulator_id,
+        req.sampler_id,
+    )
+    .await
+    .map(Json)
+    .map_err(|e| {
+        let (status, _msg): (StatusCode, &'static str) = e.into();
+        status
+    })
 }
 
 pub async fn task_failed(
