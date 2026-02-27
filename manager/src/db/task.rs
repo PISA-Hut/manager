@@ -1,3 +1,4 @@
+use crate::entity::plan;
 use crate::entity::sea_orm_active_enums::TaskStatus;
 use crate::entity::task;
 use chrono::Utc;
@@ -31,7 +32,8 @@ pub async fn create(
 pub async fn claim_task_with_filters(
     db: &DatabaseConnection,
     worker_id: i32,
-    plan_id: Option<i32>,
+    map_id: Option<i32>,
+    scenario_id: Option<i32>,
     av_id: Option<i32>,
     simulator_id: Option<i32>,
     sampler_id: Option<i32>,
@@ -40,10 +42,12 @@ pub async fn claim_task_with_filters(
         .transaction(|txn| {
             Box::pin(async move {
                 let task = task::Entity::find()
+                    .join(JoinType::InnerJoin, task::Relation::Plan.def())
                     .filter(task::Column::WorkerId.is_null())
                     .filter(task::Column::Status.eq(TaskStatus::Pending))
-                    .apply_if(plan_id, |q, plan_id| {
-                        q.filter(task::Column::PlanId.eq(plan_id))
+                    .apply_if(map_id, |q, map_id| q.filter(plan::Column::MapId.eq(map_id)))
+                    .apply_if(scenario_id, |q, scenario_id| {
+                        q.filter(plan::Column::ScenarioId.eq(scenario_id))
                     })
                     .apply_if(av_id, |q, av_id| q.filter(task::Column::AvId.eq(av_id)))
                     .apply_if(simulator_id, |q, simulator_id| {

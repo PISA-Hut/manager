@@ -70,7 +70,8 @@ pub async fn claim_task(
     service::task::claim_task_for_worker(
         &state,
         req.worker_id,
-        req.plan_id,
+        req.map_id,
+        req.scenario_id,
         req.av_id,
         req.simulator_id,
         req.sampler_id,
