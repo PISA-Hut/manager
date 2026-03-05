@@ -22,7 +22,6 @@ pub struct TaskResponse {
     pub av_id: i32,
     pub simulator_id: i32,
     pub sampler_id: i32,
-    pub status: TaskStatusDto,
     pub created_at: DateTime<Utc>,
     pub retry_count: i32,
 }
@@ -35,7 +34,6 @@ impl From<task::Model> for TaskResponse {
             av_id: m.av_id,
             simulator_id: m.simulator_id,
             sampler_id: m.sampler_id,
-            status: TaskStatusDto::from(m.task_status),
             created_at: m.created_at.with_timezone(&Utc),
             retry_count: m.retry_count,
         }
@@ -44,35 +42,12 @@ impl From<task::Model> for TaskResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct ClaimTaskRequest {
-    #[serde(alias = "executor_id")]
     pub executor_id: i32,
     pub map_id: Option<i32>,
     pub scenario_id: Option<i32>,
     pub av_id: Option<i32>,
     pub simulator_id: Option<i32>,
     pub sampler_id: Option<i32>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct TaskFailedRequest {
-    pub task_id: i32,
-    pub reason: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct TaskSucceededRequest {
-    pub task_id: i32,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum TaskStatusDto {
-    Created,
-    Pending,
-    Running,
-    Completed,
-    Failed,
-    Invalid,
 }
 
 #[derive(Debug, Serialize)]
@@ -94,4 +69,10 @@ impl From<task::Model> for TaskExecutionDto {
     fn from(m: task::Model) -> Self {
         Self { id: m.id }
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TaskRunUpdateRequest {
+    pub task_id: i32,
+    pub reason: Option<String>,
 }

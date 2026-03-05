@@ -3,28 +3,13 @@ use sea_orm::DbErr;
 
 use crate::app_state::AppState;
 use crate::db;
-use crate::entity::sea_orm_active_enums::TaskStatus as DbTaskStatus;
 use crate::entity::{av, map, sampler, scenario, simulator, task};
 use crate::http::dto::av::AvExecutionDto;
 use crate::http::dto::map::MapExecutionDto;
 use crate::http::dto::sampler::SamplerExecutionDto;
 use crate::http::dto::scenario::ScenarioExecutionDto;
 use crate::http::dto::simulator::SimulatorExecutionDto;
-use crate::http::dto::task::TaskStatusDto;
 use crate::http::dto::task::{ClaimTaskResponse, TaskExecutionDto};
-
-impl From<DbTaskStatus> for TaskStatusDto {
-    fn from(value: DbTaskStatus) -> Self {
-        match value {
-            DbTaskStatus::Created => TaskStatusDto::Created,
-            DbTaskStatus::Pending => TaskStatusDto::Pending,
-            DbTaskStatus::Running => TaskStatusDto::Running,
-            DbTaskStatus::Completed => TaskStatusDto::Completed,
-            DbTaskStatus::Failed => TaskStatusDto::Failed,
-            DbTaskStatus::Invalid => TaskStatusDto::Invalid,
-        }
-    }
-}
 
 #[derive(Debug)]
 pub enum TaskServiceError {
@@ -100,7 +85,7 @@ pub async fn claim_task_for_executor(
 
 async fn claim_and_resolve_task(
     state: &AppState,
-    worker_id: i32,
+    executor_id: i32,
     map_id: Option<i32>,
     scenario_id: Option<i32>,
     av_id: Option<i32>,
@@ -109,7 +94,7 @@ async fn claim_and_resolve_task(
 ) -> Result<Option<ResolvedTask>, TaskServiceError> {
     let task = db::task::claim_task_with_filters(
         &state.db,
-        worker_id,
+        executor_id,
         map_id,
         scenario_id,
         av_id,
@@ -155,8 +140,8 @@ pub async fn complete_task(
     state: &AppState,
     task_id: i32,
 ) -> Result<task::Model, TaskServiceError> {
-    let updated =
-        db::task::complete_task(&state.db, task_id, DbTaskStatus::Completed, None).await?;
+    println!("Completing task {}", task_id);
+    let updated = db::task::complete_task(&state.db, task_id).await?;
     let updated = match updated {
         Some(t) => t,
         None => return Err(TaskServiceError::NotFound("task not found")),
@@ -168,11 +153,11 @@ pub async fn complete_task(
 pub async fn invalidate_task(
     state: &AppState,
     task_id: i32,
-    reason: String,
+    reason: Option<String>,
 ) -> Result<task::Model, TaskServiceError> {
+    let reason = reason.unwrap_or_else(|| "task marked invalid".to_string());
     println!("Invalidating task {} with reason: {}", task_id, reason);
-    let updated =
-        db::task::complete_task(&state.db, task_id, DbTaskStatus::Invalid, Some(reason)).await?;
+    let updated = db::task::invalidate_task(&state.db, task_id, reason).await?;
     let updated = match updated {
         Some(t) => t,
         None => return Err(TaskServiceError::NotFound("task not found")),
@@ -183,25 +168,15 @@ pub async fn invalidate_task(
 pub async fn fail_task(
     state: &AppState,
     task_id: i32,
-    reason: String,
+    reason: Option<String>,
 ) -> Result<task::Model, TaskServiceError> {
+    let reason = reason.unwrap_or_else(|| "task failed".to_string());
     println!("Failing task {} with reason: {}", task_id, reason);
-    let updated =
-        db::task::complete_task(&state.db, task_id, DbTaskStatus::Failed, Some(reason)).await?;
+    let updated = db::task::fail_task(&state.db, task_id, reason).await?;
     let updated = match updated {
         Some(t) => t,
         None => return Err(TaskServiceError::NotFound("task not found")),
     };
-
-    // create a new task with same plan, av, simulator, sampler
-    db::task::create(
-        &state.db,
-        updated.plan_id,
-        updated.av_id,
-        updated.sampler_id,
-        updated.simulator_id,
-    )
-    .await?;
 
     Ok(updated)
 }

@@ -3,8 +3,7 @@ use axum::{Json, extract::State, http::StatusCode};
 use crate::app_state::AppState;
 use crate::db;
 use crate::http::dto::task::{
-    ClaimTaskRequest, ClaimTaskResponse, CreateTaskRequest, TaskFailedRequest, TaskResponse,
-    TaskSucceededRequest,
+    ClaimTaskRequest, ClaimTaskResponse, CreateTaskRequest, TaskResponse, TaskRunUpdateRequest,
 };
 use crate::service;
 
@@ -86,7 +85,7 @@ pub async fn claim_task(
 
 pub async fn task_failed(
     State(state): State<AppState>,
-    Json(payload): Json<TaskFailedRequest>,
+    Json(payload): Json<TaskRunUpdateRequest>,
 ) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
     service::task::fail_task(&state, payload.task_id, payload.reason)
         .await
@@ -98,9 +97,9 @@ pub async fn task_failed(
         })
 }
 
-pub async fn task_invalid(
+pub async fn task_invalidated(
     State(state): State<AppState>,
-    Json(payload): Json<TaskFailedRequest>,
+    Json(payload): Json<TaskRunUpdateRequest>,
 ) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
     service::task::invalidate_task(&state, payload.task_id, payload.reason)
         .await
@@ -112,9 +111,9 @@ pub async fn task_invalid(
         })
 }
 
-pub async fn task_succeeded(
+pub async fn task_completed(
     State(state): State<AppState>,
-    Json(payload): Json<TaskSucceededRequest>,
+    Json(payload): Json<TaskRunUpdateRequest>,
 ) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
     service::task::complete_task(&state, payload.task_id)
         .await

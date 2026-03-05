@@ -24,7 +24,7 @@ pub async fn create(
         av_id: Set(av_id),
         sampler_id: Set(sampler_id),
         simulator_id: Set(simulator_id),
-        task_status: Set(TaskStatus::Created),
+        task_status: Set(TaskStatus::Pending),
         retry_count: Set(0),
         ..Default::default()
     };
@@ -97,8 +97,6 @@ pub async fn claim_task_with_filters(
 pub async fn complete_task(
     db: &DatabaseConnection,
     task_id: i32,
-    status: TaskStatus,
-    error_message: Option<String>,
 ) -> Result<Option<task::Model>, DbErr> {
     let result = db
         .transaction(|txn| {
@@ -112,27 +110,115 @@ pub async fn complete_task(
                 };
 
                 let mut active_task: task::ActiveModel = task.into();
-                active_task.task_status = Set(status.clone());
+                active_task.task_status = Set(TaskStatus::Completed);
                 let updated_task = active_task.update(txn).await?;
 
                 if let Some(run) = task_run::Entity::find()
                     .filter(task_run::Column::TaskId.eq(task_id))
+                    .filter(task_run::Column::TaskRunStatus.eq(TaskRunStatus::Running))
                     .order_by_desc(task_run::Column::Attempt)
                     .lock_with_behavior(LockType::Update, LockBehavior::SkipLocked)
                     .one(txn)
                     .await?
                 {
                     let mut active_run: task_run::ActiveModel = run.into();
-                    active_run.task_run_status = Set(match status {
-                        TaskStatus::Completed => TaskRunStatus::Completed,
-                        TaskStatus::Failed => TaskRunStatus::Failed,
-                        TaskStatus::Invalid => TaskRunStatus::Aborted,
-                        _ => TaskRunStatus::Running,
-                    });
+                    active_run.task_run_status = Set(TaskRunStatus::Completed);
                     active_run.finished_at = Set(Some(Utc::now().fixed_offset()));
-                    if let Some(msg) = error_message {
-                        active_run.error_message = Set(Some(msg));
-                    }
+                    active_run.update(txn).await?;
+                }
+
+                Ok(Some(updated_task))
+            })
+        })
+        .await;
+
+    match result {
+        Ok(v) => Ok(v),
+        Err(TransactionError::Connection(e)) => Err(e),
+        Err(TransactionError::Transaction(e)) => Err(e),
+    }
+}
+
+pub async fn fail_task(
+    db: &DatabaseConnection,
+    task_id: i32,
+    reason: String,
+) -> Result<Option<task::Model>, DbErr> {
+    let result = db
+        .transaction(|txn| {
+            Box::pin(async move {
+                let task = task::Entity::find_by_id(task_id)
+                    .lock_with_behavior(LockType::Update, LockBehavior::SkipLocked)
+                    .one(txn)
+                    .await?;
+                let Some(task_model) = task else {
+                    return Ok(None);
+                };
+
+                let mut active_task: task::ActiveModel = task_model.clone().into();
+                active_task.task_status = Set(TaskStatus::Pending);
+                active_task.retry_count = Set(task_model.retry_count + 1);
+                let updated_task = active_task.update(txn).await?;
+
+                if let Some(run) = task_run::Entity::find()
+                    .filter(task_run::Column::TaskId.eq(task_id))
+                    .filter(task_run::Column::TaskRunStatus.eq(TaskRunStatus::Running))
+                    .order_by_desc(task_run::Column::Attempt)
+                    .lock_with_behavior(LockType::Update, LockBehavior::SkipLocked)
+                    .one(txn)
+                    .await?
+                {
+                    let mut active_run: task_run::ActiveModel = run.into();
+                    active_run.task_run_status = Set(TaskRunStatus::Failed);
+                    active_run.finished_at = Set(Some(Utc::now().fixed_offset()));
+                    active_run.error_message = Set(Some(reason));
+                    active_run.update(txn).await?;
+                }
+
+                Ok(Some(updated_task))
+            })
+        })
+        .await;
+
+    match result {
+        Ok(v) => Ok(v),
+        Err(TransactionError::Connection(e)) => Err(e),
+        Err(TransactionError::Transaction(e)) => Err(e),
+    }
+}
+
+pub async fn invalidate_task(
+    db: &DatabaseConnection,
+    task_id: i32,
+    reason: String,
+) -> Result<Option<task::Model>, DbErr> {
+    let result = db
+        .transaction(|txn| {
+            Box::pin(async move {
+                let task = task::Entity::find_by_id(task_id)
+                    .lock_with_behavior(LockType::Update, LockBehavior::SkipLocked)
+                    .one(txn)
+                    .await?;
+                let Some(task) = task else {
+                    return Ok(None);
+                };
+
+                let mut active_task: task::ActiveModel = task.into();
+                active_task.task_status = Set(TaskStatus::Invalid);
+                let updated_task = active_task.update(txn).await?;
+
+                if let Some(run) = task_run::Entity::find()
+                    .filter(task_run::Column::TaskId.eq(task_id))
+                    .filter(task_run::Column::TaskRunStatus.eq(TaskRunStatus::Running))
+                    .order_by_desc(task_run::Column::Attempt)
+                    .lock_with_behavior(LockType::Update, LockBehavior::SkipLocked)
+                    .one(txn)
+                    .await?
+                {
+                    let mut active_run: task_run::ActiveModel = run.into();
+                    active_run.task_run_status = Set(TaskRunStatus::Aborted);
+                    active_run.finished_at = Set(Some(Utc::now().fixed_offset()));
+                    active_run.error_message = Set(Some(reason));
                     active_run.update(txn).await?;
                 }
 
