@@ -16,8 +16,9 @@ pub async fn connect(path: &str) -> DatabaseConnection {
         .min_connections(5)
         .connect_timeout(std::time::Duration::from_secs(8))
         .sqlx_logging(false);
-
-    Database::connect(opt).await.unwrap()
+    Database::connect(opt)
+        .await
+        .unwrap_or_else(|e| panic!("Failed to connect to database at {}: {}", path, e))
 }
 
 pub async fn migrate(db: &DatabaseConnection) -> Result<(), sea_orm_migration::prelude::DbErr> {

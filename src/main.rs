@@ -16,7 +16,7 @@ async fn main() {
         .init();
     dotenv::dotenv().ok();
 
-    let db = db::connect(&std::env::var("DATABASE_URL").expect("DATABSE_URL")).await;
+    let db = db::connect(&std::env::var("DATABASE_URL").expect("DATABASE_URL must be set")).await;
     db::migrate(&db).await.unwrap();
 
     let state = AppState { db };
