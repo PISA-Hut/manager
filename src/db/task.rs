@@ -216,7 +216,7 @@ pub async fn invalidate_task(
                     .await?
                 {
                     let mut active_run: task_run::ActiveModel = run.into();
-                    active_run.task_run_status = Set(TaskRunStatus::Aborted);
+                    active_run.task_run_status = Set(TaskRunStatus::Completed);
                     active_run.finished_at = Set(Some(Utc::now().fixed_offset()));
                     active_run.error_message = Set(Some(reason));
                     active_run.update(txn).await?;
