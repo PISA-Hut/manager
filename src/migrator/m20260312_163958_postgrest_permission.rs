@@ -1,6 +1,5 @@
 // src/migrator/m20260312_163958_postgrest_permission.rs (create new file)
 
-use dotenv::dotenv;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -14,8 +13,6 @@ impl MigrationName for Migration {
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        dotenv().ok();
-
         let authenticator_password =
             std::env::var("AUTHENTICATOR_PASSWORD").expect("AUTHENTICATOR_PASSWORD must be set");
 
