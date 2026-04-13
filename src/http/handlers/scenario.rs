@@ -22,6 +22,7 @@ pub async fn create_scenario(
 ) -> Result<Json<ScenarioResponse>, StatusCode> {
     let scenario = db::scenario::create(
         &state.db,
+        payload.format,
         payload.title,
         payload.scenario_path,
         payload.goal_config,

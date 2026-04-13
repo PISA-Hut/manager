@@ -1,4 +1,5 @@
 use crate::entity::scenario;
+use crate::entity::sea_orm_active_enums::ScenarioFormat;
 use sea_orm::*;
 
 pub async fn find_all(db: &DatabaseConnection) -> Result<Vec<scenario::Model>, DbErr> {
@@ -7,11 +8,13 @@ pub async fn find_all(db: &DatabaseConnection) -> Result<Vec<scenario::Model>, D
 
 pub async fn create(
     db: &DatabaseConnection,
+    format: ScenarioFormat,
     title: Option<String>,
     scenario_path: String,
     goal_config: serde_json::Value,
 ) -> Result<scenario::Model, DbErr> {
     let active = scenario::ActiveModel {
+        scenario_format: Set(format),
         title: Set(title),
         scenario_path: Set(scenario_path),
         goal_config: Set(goal_config),

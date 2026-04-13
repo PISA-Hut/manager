@@ -1,6 +1,7 @@
 // src/migrator/m20260214_163021_new_db_schema.rs (create new file)
 
 use sea_orm::ActiveEnum;
+use sea_orm::sea_query::extension::postgres::Type;
 use sea_orm::{DbBackend, Schema};
 use sea_orm_migration::prelude::*;
 
@@ -17,10 +18,20 @@ impl MigrationName for Migration {
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let schema = Schema::new(DbBackend::Postgres);
         manager
-            .create_type(schema.create_enum_from_active_enum::<ScenarioType>())
+            .create_type(
+                Type::create()
+                    .as_enum(ScenarioFormat::Enum)
+                    .values([
+                        ScenarioFormat::OpenScenario1,
+                        ScenarioFormat::OpenScenario2,
+                        ScenarioFormat::CarlaLBRoute,
+                    ])
+                    .to_owned(),
+            )
             .await?;
+
+        let schema = Schema::new(DbBackend::Postgres);
 
         manager
             .create_type(schema.create_enum_from_active_enum::<TaskStatus>())
@@ -97,8 +108,15 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(
-                        ColumnDef::new(Scenario::Type)
-                            .custom(ScenarioType::name())
+                        ColumnDef::new(Scenario::ScenarioFormat)
+                            .enumeration(
+                                Scenario::ScenarioFormat,
+                                [
+                                    ScenarioFormat::OpenScenario1,
+                                    ScenarioFormat::OpenScenario2,
+                                    ScenarioFormat::CarlaLBRoute,
+                                ],
+                            )
                             .not_null(),
                     )
                     .col(ColumnDef::new(Scenario::Title).string().null())
@@ -409,20 +427,18 @@ enum Map {
 enum Scenario {
     Table,
     Id,
-    Type,
+    ScenarioFormat,
     Title,
     ScenarioPath,
     GoalConfig,
 }
 
-#[derive(DeriveActiveEnum, EnumIter)]
-#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "scenario_type")]
-enum ScenarioType {
-    #[sea_orm(string_value = "OpenScenario1.0")]
+#[derive(Iden)]
+enum ScenarioFormat {
+    #[iden = "scenario_format"]
+    Enum,
     OpenScenario1,
-    #[sea_orm(string_value = "OpenScenario2.0")]
     OpenScenario2,
-    #[sea_orm(string_value = "CarlaLBRoute")]
     CarlaLBRoute,
 }
 
