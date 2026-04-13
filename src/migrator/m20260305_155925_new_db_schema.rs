@@ -17,6 +17,19 @@ impl MigrationName for Migration {
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let schema = Schema::new(DbBackend::Postgres);
+        manager
+            .create_type(schema.create_enum_from_active_enum::<ScenarioType>())
+            .await?;
+
+        manager
+            .create_type(schema.create_enum_from_active_enum::<TaskStatus>())
+            .await?;
+
+        manager
+            .create_type(schema.create_enum_from_active_enum::<TaskRunStatus>())
+            .await?;
+
         manager
             .create_table(
                 Table::create()
@@ -82,6 +95,11 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .auto_increment()
                             .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(Scenario::Type)
+                            .custom(ScenarioType::name())
+                            .not_null(),
                     )
                     .col(ColumnDef::new(Scenario::Title).string().null())
                     .col(ColumnDef::new(Scenario::ScenarioPath).string().not_null())
@@ -192,11 +210,6 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        let schema = Schema::new(DbBackend::Postgres);
-        manager
-            .create_type(schema.create_enum_from_active_enum::<TaskStatus>())
-            .await?;
-
         manager
             .create_table(
                 Table::create()
@@ -251,11 +264,6 @@ impl MigrationTrait for Migration {
                     )
                     .to_owned(),
             )
-            .await?;
-
-        let schema = Schema::new(DbBackend::Postgres);
-        manager
-            .create_type(schema.create_enum_from_active_enum::<TaskRunStatus>())
             .await?;
 
         manager
@@ -401,9 +409,21 @@ enum Map {
 enum Scenario {
     Table,
     Id,
+    Type,
     Title,
     ScenarioPath,
     GoalConfig,
+}
+
+#[derive(DeriveActiveEnum, EnumIter)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "scenario_type")]
+enum ScenarioType {
+    #[sea_orm(string_value = "OpenScenario1.0")]
+    OpenScenario1,
+    #[sea_orm(string_value = "OpenScenario2.0")]
+    OpenScenario2,
+    #[sea_orm(string_value = "CarlaLBRoute")]
+    CarlaLBRoute,
 }
 
 #[derive(DeriveIden)]
