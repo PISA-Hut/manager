@@ -33,6 +33,7 @@ services:
     depends_on:
       - postgres
       - manager
+    restart: always
 
   swagger:
     image: swaggerapi/swagger-ui:v5.32.0

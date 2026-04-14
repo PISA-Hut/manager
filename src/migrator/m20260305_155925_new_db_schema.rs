@@ -25,7 +25,7 @@ impl MigrationTrait for Migration {
                     .values([
                         ScenarioFormat::OpenScenario1,
                         ScenarioFormat::OpenScenario2,
-                        ScenarioFormat::CarlaLBRoute,
+                        ScenarioFormat::CarlaLbRoute,
                     ])
                     .to_owned(),
             )
@@ -114,7 +114,7 @@ impl MigrationTrait for Migration {
                                 [
                                     ScenarioFormat::OpenScenario1,
                                     ScenarioFormat::OpenScenario2,
-                                    ScenarioFormat::CarlaLBRoute,
+                                    ScenarioFormat::CarlaLbRoute,
                                 ],
                             )
                             .not_null(),
@@ -439,7 +439,7 @@ enum ScenarioFormat {
     Enum,
     OpenScenario1,
     OpenScenario2,
-    CarlaLBRoute,
+    CarlaLbRoute,
 }
 
 #[derive(DeriveIden)]
