@@ -18,20 +18,11 @@ impl MigrationName for Migration {
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
-            .create_type(
-                Type::create()
-                    .as_enum(ScenarioFormat::Enum)
-                    .values([
-                        ScenarioFormat::OpenScenario1,
-                        ScenarioFormat::OpenScenario2,
-                        ScenarioFormat::CarlaLbRoute,
-                    ])
-                    .to_owned(),
-            )
-            .await?;
-
         let schema = Schema::new(DbBackend::Postgres);
+
+        manager
+            .create_type(schema.create_enum_from_active_enum::<ScenarioFormat>())
+            .await?;
 
         manager
             .create_type(schema.create_enum_from_active_enum::<TaskStatus>())
@@ -109,14 +100,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(
                         ColumnDef::new(Scenario::ScenarioFormat)
-                            .enumeration(
-                                Scenario::ScenarioFormat,
-                                [
-                                    ScenarioFormat::OpenScenario1,
-                                    ScenarioFormat::OpenScenario2,
-                                    ScenarioFormat::CarlaLbRoute,
-                                ],
-                            )
+                            .custom(ScenarioFormat::name())
                             .not_null(),
                     )
                     .col(ColumnDef::new(Scenario::Title).string().null())
@@ -378,7 +362,7 @@ impl MigrationTrait for Migration {
             .drop_table(Table::drop().table(Executor::Table).to_owned())
             .await?;
         manager
-            .drop_type(Type::drop().name(Scenario::ScenarioFormat).to_owned())
+            .drop_type(Type::drop().name(ScenarioFormat::name()).to_owned())
             .await?;
         manager
             .drop_type(Type::drop().name(TaskStatus::name()).to_owned())
@@ -442,12 +426,14 @@ enum Scenario {
     GoalConfig,
 }
 
-#[derive(Iden)]
+#[derive(DeriveActiveEnum, EnumIter)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "scenario_format")]
 enum ScenarioFormat {
-    #[iden = "scenario_format"]
-    Enum,
+    #[sea_orm(string_value = "open_scenario1")]
     OpenScenario1,
+    #[sea_orm(string_value = "open_scenario2")]
     OpenScenario2,
+    #[sea_orm(string_value = "carla_lb_route")]
     CarlaLbRoute,
 }
 
