@@ -10,7 +10,6 @@ FROM debian:bookworm-slim
 
 WORKDIR /app
 
-COPY .env .env
 COPY --from=builder /app/target/release/manager /app/manager
 
 CMD ["./manager"]
