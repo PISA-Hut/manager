@@ -1,27 +1,35 @@
 # Scenario-Queue Manager
 
-This is a task manager for the PISA Scenario-Queue project. It is responsible for managing the tasks that are created by the users and assigning them to the appropriate executors.
+The Rust API server for the PISA Scenario-Queue project. It manages simulation scenario tasks, assigns them to executors, and tracks execution lifecycle.
 
-## Usage
-
-### Configuration
-
-Copy the `.env.example` file to `.env` and fill in the required environment variables.
-
-### Running the Application
-
-You can run the application using Docker Compose:
+## Building
 
 ```bash
-docker-compose up --build
+cargo build
+cargo build --release
 ```
 
-It will start the following services:
-- `postgres`: The PostgreSQL database for storing task and user data.
-- `postgrest`: The PostgREST server for providing a RESTful API to the database.
-- `manager`: The main application that manages the tasks.
-- `swagger-ui`: The Swagger UI for API documentation and testing.
+## Running
 
-## Contributing
+The manager requires the following environment variables:
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you have any ideas or suggestions.
+- `DATABASE_URL` — PostgreSQL connection string
+- `AUTHENTICATOR_PASSWORD` — PostgREST role password (used by migrations)
+- `MANAGER_BIND_ADDR` — bind address (default: `127.0.0.1`)
+- `MANAGER_PORT` — listen port (default: `9000`)
+- `MANAGER_CORS_ALLOW_ORIGINS` — optional CORS origins
+
+```bash
+RUST_LOG=debug cargo run
+```
+
+## Docker
+
+```bash
+docker build -t manager .
+docker run -e DATABASE_URL=... -e AUTHENTICATOR_PASSWORD=... manager
+```
+
+## Full Stack
+
+To run the manager together with PostgreSQL, PostgREST, Swagger UI, and nginx, see the [`infra/`](../infra/) directory.
