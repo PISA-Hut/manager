@@ -21,6 +21,16 @@ pub async fn create(
     active.insert(db).await
 }
 
+pub async fn find_by_name(
+    db: &DatabaseConnection,
+    name: &str,
+) -> Result<Option<map::Model>, DbErr> {
+    map::Entity::find()
+        .filter(map::Column::Name.eq(name))
+        .one(db)
+        .await
+}
+
 pub async fn map_exists(db: &DatabaseConnection, map_id: i32) -> Result<bool, DbErr> {
     let count = map::Entity::find_by_id(map_id).one(db).await?.is_some() as i64;
 

@@ -18,7 +18,13 @@ async fn main() {
     let db = db::connect(&std::env::var("DATABASE_URL").expect("DATABASE_URL must be set")).await;
     db::migrate(&db).await.unwrap();
 
-    let state = AppState { db };
+    let scenario_storage_dir =
+        std::env::var("SCENARIO_STORAGE_DIR").unwrap_or_else(|_| "/data/scenarios".to_string());
+
+    let state = AppState {
+        db,
+        scenario_storage_dir,
+    };
 
     let app = http::router::create_router(state);
 

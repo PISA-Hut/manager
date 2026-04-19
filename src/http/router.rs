@@ -45,5 +45,6 @@ pub fn create_router(state: AppState) -> Router {
         .route("/task/failed", post(handlers::task::task_failed))
         .route("/task/invalid", post(handlers::task::task_invalidated))
         .route("/task/succeeded", post(handlers::task::task_completed))
+        .route("/scenario/upload", post(handlers::upload::upload_scenarios))
         .with_state(state)
 }
