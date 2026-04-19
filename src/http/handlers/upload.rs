@@ -235,18 +235,14 @@ pub async fn upload_scenarios(
         }
 
         let mut file_error = None;
-        // Re-read zip to extract files for this scenario
-        let cursor2 = std::io::Cursor::new(
-            archive
-                .into_inner()
-                .into_inner()
-                .clone(),
-        );
-        archive = zip::ZipArchive::new(cursor2)
+        // Re-read zip to extract files for this scenario without cloning the full zip bytes
+        let zip_bytes = archive.get_mut().get_ref().as_slice();
+        let cursor2 = std::io::Cursor::new(zip_bytes);
+        let mut scenario_archive = zip::ZipArchive::new(cursor2)
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Zip re-read error: {e}")))?;
 
-        for i in 0..archive.len() {
-            let mut file = archive
+        for i in 0..scenario_archive.len() {
+            let mut file = scenario_archive
                 .by_index(i)
                 .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Zip read error: {e}")))?;
 
