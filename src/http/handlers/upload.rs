@@ -94,17 +94,23 @@ pub async fn upload_scenarios(
             continue;
         }
 
-        // The scenario folder is the first component (or second if there's a wrapper dir)
-        // Handle both "scenario_name/spec.yaml" and "wrapper/scenario_name/spec.yaml"
-        let (folder_name, file_name) = if components.len() == 2 {
-            (components[0].to_string(), components[1].to_string())
-        } else {
-            // Use the second-to-last component as folder, last as file
-            let depth = components.len();
-            (
-                components[depth - 2].to_string(),
-                components[depth - 1].to_string(),
-            )
+        // Supported layouts:
+        // - "scenario_name/file"
+        // - "wrapper/scenario_name/file"
+        let (folder_name, file_name) = match components.as_slice() {
+            [scenario_name, file_name] => ((*scenario_name).to_string(), (*file_name).to_string()),
+            [_, scenario_name, file_name] => {
+                ((*scenario_name).to_string(), (*file_name).to_string())
+            }
+            _ => {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    format!(
+                        "Unsupported archive path layout: {}. Expected 'scenario_name/<file>' or 'wrapper/scenario_name/<file>'",
+                        path.display()
+                    ),
+                ));
+            }
         };
 
         if file.is_dir() {
