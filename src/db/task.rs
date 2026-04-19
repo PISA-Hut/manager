@@ -70,20 +70,18 @@ pub async fn claim_task_with_filters(
                     return Ok(None);
                 };
 
+                // Count existing runs to derive retry_count and next attempt
+                let run_count = task_run::Entity::find()
+                    .filter(task_run::Column::TaskId.eq(task.id))
+                    .count(txn)
+                    .await? as i32;
+
                 let mut active: task::ActiveModel = task.clone().into();
                 active.task_status = Set(TaskStatus::Running);
+                active.retry_count = Set(run_count);
                 let updated = active.update(txn).await?;
 
-                // Use max(attempt) + 1 to avoid unique constraint violation
-                // (retry_count can be reset but old task_runs remain)
-                let max_attempt: Option<i32> = task_run::Entity::find()
-                    .filter(task_run::Column::TaskId.eq(updated.id))
-                    .select_only()
-                    .column_as(task_run::Column::Attempt.max(), "max_attempt")
-                    .into_tuple()
-                    .one(txn)
-                    .await?;
-                let next_attempt = max_attempt.unwrap_or(0) + 1;
+                let next_attempt = run_count + 1;
 
                 let active_run = task_run::ActiveModel {
                     task_id: Set(updated.id),
@@ -193,9 +191,12 @@ pub async fn fail_task(
                             && r.error_message.as_deref() == Some(&reason)
                     });
 
-                let new_retry_count = task_model.retry_count + 1;
+                let run_count = task_run::Entity::find()
+                    .filter(task_run::Column::TaskId.eq(task_id))
+                    .count(txn)
+                    .await? as i32;
+
                 let new_status = if consecutive_same_error {
-                    // This is the 10th consecutive identical error
                     TaskStatus::Failed
                 } else {
                     TaskStatus::Pending
@@ -203,7 +204,7 @@ pub async fn fail_task(
 
                 let mut active_task: task::ActiveModel = task_model.clone().into();
                 active_task.task_status = Set(new_status);
-                active_task.retry_count = Set(new_retry_count);
+                active_task.retry_count = Set(run_count);
                 let updated_task = active_task.update(txn).await?;
 
                 // Update the current running task_run
