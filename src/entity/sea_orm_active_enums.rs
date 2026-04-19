@@ -13,7 +13,7 @@ pub enum ScenarioFormat {
     #[sea_orm(string_value = "carla_lb_route")]
     CarlaLbRoute,
 }
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "task_run_status")]
 pub enum TaskRunStatus {
     #[sea_orm(string_value = "running")]
@@ -25,7 +25,7 @@ pub enum TaskRunStatus {
     #[sea_orm(string_value = "aborted")]
     Aborted,
 }
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "task_status")]
 pub enum TaskStatus {
     #[sea_orm(string_value = "created")]

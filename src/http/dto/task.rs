@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+use crate::entity::sea_orm_active_enums::TaskStatus;
 use crate::entity::task;
 use crate::http::dto::{
     av::AvExecutionDto, map::MapExecutionDto, sampler::SamplerExecutionDto,
@@ -22,6 +23,7 @@ pub struct TaskResponse {
     pub av_id: i32,
     pub simulator_id: i32,
     pub sampler_id: i32,
+    pub task_status: TaskStatus,
     pub created_at: DateTime<Utc>,
     pub retry_count: i32,
 }
@@ -34,6 +36,7 @@ impl From<task::Model> for TaskResponse {
             av_id: m.av_id,
             simulator_id: m.simulator_id,
             sampler_id: m.sampler_id,
+            task_status: m.task_status,
             created_at: m.created_at.with_timezone(&Utc),
             retry_count: m.retry_count,
         }
