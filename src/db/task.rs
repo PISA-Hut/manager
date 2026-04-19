@@ -111,6 +111,11 @@ pub async fn complete_task(
                     return Ok(None);
                 };
 
+                // Ignore if task is no longer running (e.g. stopped from web UI)
+                if task.task_status != TaskStatus::Running {
+                    return Ok(Some(task));
+                }
+
                 let mut active_task: task::ActiveModel = task.into();
                 active_task.task_status = Set(TaskStatus::Completed);
                 let updated_task = active_task.update(txn).await?;
@@ -156,6 +161,11 @@ pub async fn fail_task(
                 let Some(task_model) = task else {
                     return Ok(None);
                 };
+
+                // Ignore if task is no longer running (e.g. stopped from web UI)
+                if task_model.task_status != TaskStatus::Running {
+                    return Ok(Some(task_model));
+                }
 
                 // Check if the last 9 completed runs all failed with the same error
                 let recent_runs = task_run::Entity::find()
@@ -228,6 +238,11 @@ pub async fn invalidate_task(
                 let Some(task) = task else {
                     return Ok(None);
                 };
+
+                // Ignore if task is no longer running (e.g. stopped from web UI)
+                if task.task_status != TaskStatus::Running {
+                    return Ok(Some(task));
+                }
 
                 let mut active_task: task::ActiveModel = task.into();
                 active_task.task_status = Set(TaskStatus::Invalid);
