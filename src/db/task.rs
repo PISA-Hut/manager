@@ -155,9 +155,16 @@ pub async fn fail_task(
                     return Ok(None);
                 };
 
+                let new_retry_count = task_model.retry_count + 1;
+                let new_status = if new_retry_count >= 10 {
+                    TaskStatus::Failed
+                } else {
+                    TaskStatus::Pending
+                };
+
                 let mut active_task: task::ActiveModel = task_model.clone().into();
-                active_task.task_status = Set(TaskStatus::Pending);
-                active_task.retry_count = Set(task_model.retry_count + 1);
+                active_task.task_status = Set(new_status);
+                active_task.retry_count = Set(new_retry_count);
                 let updated_task = active_task.update(txn).await?;
 
                 if let Some(run) = task_run::Entity::find()
