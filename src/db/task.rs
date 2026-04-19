@@ -155,8 +155,22 @@ pub async fn fail_task(
                     return Ok(None);
                 };
 
+                // Check if the last 9 runs all failed with the same error
+                let recent_runs = task_run::Entity::find()
+                    .filter(task_run::Column::TaskId.eq(task_id))
+                    .order_by_desc(task_run::Column::Attempt)
+                    .limit(9)
+                    .all(txn)
+                    .await?;
+
+                let consecutive_same_error = recent_runs.iter().all(|r| {
+                    r.task_run_status == TaskRunStatus::Failed
+                        && r.error_message.as_deref() == Some(&reason)
+                }) && recent_runs.len() == 9;
+
                 let new_retry_count = task_model.retry_count + 1;
-                let new_status = if new_retry_count >= 10 {
+                let new_status = if consecutive_same_error {
+                    // This is the 10th consecutive identical error
                     TaskStatus::Failed
                 } else {
                     TaskStatus::Pending
@@ -167,6 +181,7 @@ pub async fn fail_task(
                 active_task.retry_count = Set(new_retry_count);
                 let updated_task = active_task.update(txn).await?;
 
+                // Update the current running task_run
                 if let Some(run) = task_run::Entity::find()
                     .filter(task_run::Column::TaskId.eq(task_id))
                     .filter(task_run::Column::TaskRunStatus.eq(TaskRunStatus::Running))
