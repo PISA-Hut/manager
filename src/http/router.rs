@@ -1,5 +1,6 @@
 use axum::{
     Router,
+    extract::DefaultBodyLimit,
     routing::{get, post},
 };
 
@@ -46,5 +47,6 @@ pub fn create_router(state: AppState) -> Router {
         .route("/task/invalid", post(handlers::task::task_invalidated))
         .route("/task/succeeded", post(handlers::task::task_completed))
         .route("/scenario/upload", post(handlers::upload::upload_scenarios))
+        .layer(DefaultBodyLimit::max(512 * 1024 * 1024))
         .with_state(state)
 }
