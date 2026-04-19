@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "scenario_format")]
+#[serde(rename_all = "snake_case")]
 pub enum ScenarioFormat {
     #[sea_orm(string_value = "open_scenario1")]
     OpenScenario1,
@@ -15,6 +16,7 @@ pub enum ScenarioFormat {
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "task_run_status")]
+#[serde(rename_all = "lowercase")]
 pub enum TaskRunStatus {
     #[sea_orm(string_value = "running")]
     Running,
@@ -27,6 +29,7 @@ pub enum TaskRunStatus {
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "task_status")]
+#[serde(rename_all = "lowercase")]
 pub enum TaskStatus {
     #[sea_orm(string_value = "created")]
     Created,

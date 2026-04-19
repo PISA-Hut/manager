@@ -28,8 +28,6 @@ pub struct ScenarioUploadResult {
     pub message: Option<String>,
 }
 
-/// Resolve the scenario folder name and file name from a zip entry path.
-/// Supports "scenario_name/file" and "wrapper/scenario_name/file".
 fn parse_zip_entry(path: &std::path::Path) -> Option<(String, String)> {
     let components: Vec<&str> = path.iter().filter_map(|c| c.to_str()).collect();
     match components.as_slice() {
@@ -128,10 +126,8 @@ pub async fn upload_scenarios(
         }
     }
 
-    // Process scenarios: create DB records
     let mut results = Vec::new();
-    // Track which scenario folders were successfully created so we can extract their files
-    let mut created_scenarios: HashMap<String, String> = HashMap::new(); // folder_name -> scenario_name
+    let mut created_scenarios: HashMap<String, String> = HashMap::new();
 
     for (folder_name, spec) in &specs {
         let scenario_name = spec
@@ -287,7 +283,6 @@ pub async fn upload_scenarios(
         }
     }
 
-    // Add success results for scenarios that made it through both passes
     for scenario_name in created_scenarios.values() {
         results.push(ScenarioUploadResult {
             name: scenario_name.clone(),
