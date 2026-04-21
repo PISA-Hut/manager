@@ -9,12 +9,10 @@ pub async fn create(
     db: &DatabaseConnection,
     name: String,
     module_path: String,
-    config_path: Option<String>,
 ) -> Result<sampler::Model, DbErr> {
     let active = sampler::ActiveModel {
         name: Set(name),
         module_path: Set(module_path),
-        config_path: Set(config_path),
         ..Default::default()
     };
 

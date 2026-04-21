@@ -27,7 +27,6 @@ pub async fn create_simulator(
         &state.db,
         payload.name,
         payload.image_path,
-        payload.config_path,
         payload.nv_runtime,
         payload.carla_runtime,
         payload.ros_runtime,

@@ -9,7 +9,6 @@ pub async fn create(
     db: &DatabaseConnection,
     name: String,
     image_path: JsonValue,
-    config_path: String,
     nv_runtime: bool,
     carla_runtime: bool,
     ros_runtime: bool,
@@ -17,7 +16,6 @@ pub async fn create(
     let active = simulator::ActiveModel {
         name: Set(name),
         image_path: Set(image_path),
-        config_path: Set(config_path),
         nv_runtime: Set(nv_runtime),
         carla_runtime: Set(carla_runtime),
         ros_runtime: Set(ros_runtime),

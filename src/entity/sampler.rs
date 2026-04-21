@@ -9,7 +9,6 @@ pub struct Model {
     pub id: i32,
     pub name: String,
     pub module_path: String,
-    pub config_path: Option<String>,
     pub config: Option<Vec<u8>>,
     pub config_sha256: Option<String>,
 }

@@ -10,7 +10,6 @@ pub struct Model {
     pub id: i32,
     pub scenario_format: ScenarioFormat,
     pub title: Option<String>,
-    pub scenario_path: String,
     pub goal_config: Json,
 }
 

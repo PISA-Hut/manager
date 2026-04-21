@@ -200,7 +200,6 @@ pub async fn upload_scenarios(
             &state.db,
             format.clone(),
             Some(scenario_name.to_string()),
-            String::new(), // bytes now live in scenario_file rows
             goal_config,
         )
         .await

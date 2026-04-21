@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct SamplerResponse {
     pub id: i32,
     pub name: String,
-    pub config_path: Option<String>,
     pub module_path: String,
+    pub config_sha256: Option<String>,
 }
 
 impl From<sampler::Model> for SamplerResponse {
@@ -14,8 +14,8 @@ impl From<sampler::Model> for SamplerResponse {
         Self {
             id: m.id,
             name: m.name,
-            config_path: m.config_path,
             module_path: m.module_path,
+            config_sha256: m.config_sha256,
         }
     }
 }
@@ -23,7 +23,6 @@ impl From<sampler::Model> for SamplerResponse {
 #[derive(Debug, Deserialize)]
 pub struct CreateSamplerRequest {
     pub name: String,
-    pub config_path: Option<String>,
     pub module_path: String,
 }
 
@@ -31,8 +30,8 @@ pub struct CreateSamplerRequest {
 pub struct SamplerExecutionDto {
     pub id: i32,
     pub name: String,
-    pub config_path: Option<String>,
     pub module_path: String,
+    pub config_sha256: Option<String>,
 }
 
 impl From<sampler::Model> for SamplerExecutionDto {
@@ -40,8 +39,8 @@ impl From<sampler::Model> for SamplerExecutionDto {
         Self {
             id: m.id,
             name: m.name,
-            config_path: m.config_path,
             module_path: m.module_path,
+            config_sha256: m.config_sha256,
         }
     }
 }

@@ -7,10 +7,10 @@ pub struct AvResponse {
     pub id: i32,
     pub name: String,
     pub image_path: JsonValue,
-    pub config_path: String,
     pub nv_runtime: bool,
     pub carla_runtime: bool,
     pub ros_runtime: bool,
+    pub config_sha256: Option<String>,
 }
 
 impl From<av::Model> for AvResponse {
@@ -19,10 +19,10 @@ impl From<av::Model> for AvResponse {
             id: m.id,
             name: m.name,
             image_path: m.image_path,
-            config_path: m.config_path,
             nv_runtime: m.nv_runtime,
             carla_runtime: m.carla_runtime,
             ros_runtime: m.ros_runtime,
+            config_sha256: m.config_sha256,
         }
     }
 }
@@ -31,7 +31,6 @@ impl From<av::Model> for AvResponse {
 pub struct CreateAvRequest {
     pub name: String,
     pub image_path: JsonValue,
-    pub config_path: String,
     pub nv_runtime: bool,
     #[serde(default)]
     pub carla_runtime: bool,
@@ -44,10 +43,10 @@ pub struct AvExecutionDto {
     pub id: i32,
     pub name: String,
     pub image_path: JsonValue,
-    pub config_path: String,
     pub nv_runtime: bool,
     pub carla_runtime: bool,
     pub ros_runtime: bool,
+    pub config_sha256: Option<String>,
 }
 
 impl From<av::Model> for AvExecutionDto {
@@ -56,10 +55,10 @@ impl From<av::Model> for AvExecutionDto {
             id: m.id,
             name: m.name,
             image_path: m.image_path,
-            config_path: m.config_path,
             nv_runtime: m.nv_runtime,
             carla_runtime: m.carla_runtime,
             ros_runtime: m.ros_runtime,
+            config_sha256: m.config_sha256,
         }
     }
 }
