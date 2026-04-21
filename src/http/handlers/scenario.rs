@@ -20,7 +20,7 @@ pub async fn create_scenario(
     State(state): State<AppState>,
     Json(payload): Json<CreateScenarioRequest>,
 ) -> Result<Json<ScenarioResponse>, StatusCode> {
-    let scenario = db::scenario::create(&state.db, payload.format, payload.title, payload.goal_config)
+    let scenario = db::scenario::create(&state.db, payload.format, payload.title)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 

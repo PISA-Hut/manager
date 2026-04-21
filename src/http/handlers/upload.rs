@@ -16,7 +16,6 @@ use crate::http::handlers::bytes::sha256_hex;
 struct SpecYaml {
     scenario_name: Option<String>,
     map_name: Option<String>,
-    ego: Option<serde_json::Value>,
 }
 
 #[derive(Serialize)]
@@ -39,21 +38,6 @@ pub struct ScenarioUploadResult {
 /// (e.g. `00-2/<scenario>/…`). The scenario folder is the first component
 /// after the wrapper (if any); the relative path preserves any subdirs
 /// inside the scenario folder (e.g. `Catalogs/Vehicles.xosc`).
-/// simcore expects `goal_config.position`, but the spec.yaml shipped with
-/// bulk-uploaded scenarios uses `goal_config.goal`. Rename the key on ingest
-/// so task_runs don't blow up on `ValueError: ego.position not defined`.
-fn normalize_goal_config(v: serde_json::Value) -> serde_json::Value {
-    let serde_json::Value::Object(mut map) = v else {
-        return v;
-    };
-    if !map.contains_key("position")
-        && let Some(goal) = map.remove("goal")
-    {
-        map.insert("position".to_string(), goal);
-    }
-    serde_json::Value::Object(map)
-}
-
 fn parse_zip_entry(
     path: &std::path::Path,
     wrapper: Option<&str>,
@@ -269,15 +253,10 @@ pub async fn upload_scenarios(
             None
         };
 
-        let goal_config = normalize_goal_config(
-            spec.ego.clone().unwrap_or(serde_json::Value::Null),
-        );
-
         let scenario_id = match db::scenario::create(
             &state.db,
             format.clone(),
             Some(scenario_name.to_string()),
-            goal_config,
         )
         .await
         {

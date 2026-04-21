@@ -10,7 +10,6 @@ pub struct Model {
     pub id: i32,
     pub scenario_format: ScenarioFormat,
     pub title: Option<String>,
-    pub goal_config: Json,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

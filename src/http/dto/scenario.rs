@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct CreateScenarioRequest {
     pub format: ScenarioFormat,
     pub title: Option<String>,
-    pub goal_config: serde_json::Value,
 }
 
 #[derive(Debug, Serialize)]
@@ -14,7 +13,6 @@ pub struct ScenarioResponse {
     pub id: i32,
     pub format: ScenarioFormat,
     pub title: Option<String>,
-    pub goal_config: serde_json::Value,
 }
 
 impl From<scenario::Model> for ScenarioResponse {
@@ -23,7 +21,6 @@ impl From<scenario::Model> for ScenarioResponse {
             id: m.id,
             format: m.scenario_format,
             title: m.title,
-            goal_config: m.goal_config,
         }
     }
 }
@@ -33,7 +30,6 @@ pub struct ScenarioExecutionDto {
     pub id: i32,
     pub format: ScenarioFormat,
     pub title: Option<String>,
-    pub goal_config: serde_json::Value,
 }
 
 impl From<scenario::Model> for ScenarioExecutionDto {
@@ -42,7 +38,6 @@ impl From<scenario::Model> for ScenarioExecutionDto {
             id: m.id,
             format: m.scenario_format,
             title: m.title,
-            goal_config: m.goal_config,
         }
     }
 }

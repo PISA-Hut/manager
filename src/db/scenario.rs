@@ -10,12 +10,10 @@ pub async fn create(
     db: &DatabaseConnection,
     format: ScenarioFormat,
     title: Option<String>,
-    goal_config: serde_json::Value,
 ) -> Result<scenario::Model, DbErr> {
     let active = scenario::ActiveModel {
         scenario_format: Set(format),
         title: Set(title),
-        goal_config: Set(goal_config),
         ..Default::default()
     };
 
