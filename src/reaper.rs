@@ -12,15 +12,35 @@ use sea_orm::DatabaseConnection;
 use tracing::{info, warn};
 
 /// Runs older than this without a log-append heartbeat get reaped. Needs
-/// to be comfortably larger than the executor's streamer interval (1 s)
-/// plus any stop-the-world pauses a live run might have.
-const STALE_AFTER_SECS: i64 = 180;
-/// How often to scan the table. Cheap — one indexed query.
-const POLL_INTERVAL: Duration = Duration::from_secs(30);
+/// to be comfortably larger than the executor's streamer interval (~1 s)
+/// plus any stop-the-world pauses a live run might have (CARLA cold
+/// start, gRPC deadline, the PUT's own network round-trip).
+///
+/// Tunable at deploy time via `REAPER_STALE_SECS`. Default 300 s —
+/// generous enough to survive the worst legitimate silence we've
+/// observed while still catching a real crash within a few minutes.
+const DEFAULT_STALE_AFTER_SECS: i64 = 300;
+const DEFAULT_POLL_INTERVAL_SECS: u64 = 30;
+
+fn read_env_secs(name: &str, default: i64) -> i64 {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse::<i64>().ok())
+        .filter(|v| *v > 0)
+        .unwrap_or(default)
+}
 
 pub fn spawn(db: DatabaseConnection) {
+    let stale_after = read_env_secs("REAPER_STALE_SECS", DEFAULT_STALE_AFTER_SECS);
+    let poll_interval = Duration::from_secs(
+        read_env_secs("REAPER_INTERVAL_SECS", DEFAULT_POLL_INTERVAL_SECS as i64) as u64,
+    );
+    info!(
+        "reaper: spawning with stale_after={}s, poll_interval={:?}",
+        stale_after, poll_interval
+    );
     tokio::spawn(async move {
-        let mut ticker = tokio::time::interval(POLL_INTERVAL);
+        let mut ticker = tokio::time::interval(poll_interval);
         ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         // Skip the first immediate tick — no point reaping before any
         // executor has had a chance to register.
@@ -28,13 +48,13 @@ pub fn spawn(db: DatabaseConnection) {
 
         loop {
             ticker.tick().await;
-            match crate::db::task_run::reap_stale_runs(&db, STALE_AFTER_SECS).await {
+            match crate::db::task_run::reap_stale_runs(&db, stale_after).await {
                 Ok(ids) if ids.is_empty() => {}
                 Ok(ids) => {
                     info!(
                         "reaper: aborted {} stale task_run(s) with no heartbeat in {}s: {:?}",
                         ids.len(),
-                        STALE_AFTER_SECS,
+                        stale_after,
                         ids
                     );
                 }
