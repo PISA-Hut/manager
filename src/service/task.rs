@@ -202,8 +202,15 @@ pub async fn fail_task(
         "Failing task {} with reason: {} (concrete_scenarios_executed={})",
         task_id, reason, concrete_scenarios_executed
     );
-    let updated =
-        db::task::fail_task(&state.db, task_id, reason, log, concrete_scenarios_executed).await?;
+    let updated = db::task::fail_task(
+        &state.db,
+        task_id,
+        reason,
+        log,
+        concrete_scenarios_executed,
+        state.useless_streak_limit,
+    )
+    .await?;
     let updated = match updated {
         Some(t) => t,
         None => return Err(TaskServiceError::NotFound("task not found")),

@@ -25,7 +25,21 @@ async fn main() {
     events::spawn_listener(database_url, events_tx.clone());
     reaper::spawn(db.clone());
 
-    let state = AppState { db, events_tx };
+    let useless_streak_limit: usize = std::env::var("USELESS_STREAK_LIMIT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .filter(|n| *n >= 1)
+        .unwrap_or(10);
+    info!(
+        "Permanent-fail after {} consecutive useless task_runs",
+        useless_streak_limit
+    );
+
+    let state = AppState {
+        db,
+        events_tx,
+        useless_streak_limit,
+    };
 
     let app = http::router::create_router(state);
 

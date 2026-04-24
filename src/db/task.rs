@@ -161,18 +161,13 @@ pub async fn complete_task(
     }
 }
 
-/// Number of consecutive useless runs that permanently fails a task.
-/// "Useless" means the executor didn't manage to finish a single concrete
-/// scenario during that attempt (concrete_scenarios_executed == 0); as
-/// soon as any attempt produces work, the streak resets.
-const USELESS_STREAK_LIMIT: usize = 10;
-
 pub async fn fail_task(
     db: &DatabaseConnection,
     task_id: i32,
     reason: String,
     log: Option<String>,
     concrete_scenarios_executed: i32,
+    useless_streak_limit: usize,
 ) -> Result<Option<task::Model>, DbErr> {
     let result = db
         .transaction(|txn| {
@@ -191,12 +186,12 @@ pub async fn fail_task(
                 }
 
                 // Permanent failure only when this failing run and the
-                // previous USELESS_STREAK_LIMIT - 1 runs all finished with
+                // previous `useless_streak_limit - 1` runs all finished with
                 // zero concrete scenarios executed. Any run — regardless of
                 // its terminal status — that managed to finish at least one
                 // concrete scenario resets the streak. Error messages are
                 // no longer compared.
-                let prior_streak_target = USELESS_STREAK_LIMIT - 1;
+                let prior_streak_target = useless_streak_limit.saturating_sub(1);
                 let recent_runs = task_run::Entity::find()
                     .filter(task_run::Column::TaskId.eq(task_id))
                     .filter(task_run::Column::TaskRunStatus.ne(TaskRunStatus::Running))
