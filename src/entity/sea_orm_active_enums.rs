@@ -31,10 +31,6 @@ pub enum TaskRunStatus {
     /// Cancelled (user Stop from web UI, SLURM scancel, SIGTERM).
     #[sea_orm(string_value = "aborted")]
     Aborted,
-    /// The scenario/config itself was bad — retrying the same inputs
-    /// won't help. Parent task goes to `invalid`.
-    #[sea_orm(string_value = "invalid")]
-    Invalid,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "task_status")]
@@ -53,12 +49,11 @@ pub enum TaskStatus {
     /// Finished successfully.
     #[sea_orm(string_value = "completed")]
     Completed,
-    /// Permanent failure — the useless-run streak was exhausted. Per-run
-    /// transient failures stay on task_run.failed and don't move the
-    /// parent task here until the streak limit is hit.
-    #[sea_orm(string_value = "exhausted")]
-    Exhausted,
-    /// Scenario/config rejected by the executor. Don't retry.
+    /// Permanent fail — reached after `USELESS_STREAK_LIMIT` consecutive
+    /// task_runs finished zero concrete scenarios. Per-run transient
+    /// failures (task_run.task_run_status = failed) don't move the
+    /// parent here until the streak hits; a single useful run resets
+    /// the streak.
     #[sea_orm(string_value = "invalid")]
     Invalid,
     /// User cancelled (web UI Stop) or SLURM scancelled the last run.

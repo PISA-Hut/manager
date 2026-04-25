@@ -85,7 +85,6 @@ pub fn create_router(state: AppState) -> Router {
         )
         .route("/task/claim", post(handlers::task::claim_task))
         .route("/task/failed", post(handlers::task::task_failed))
-        .route("/task/invalid", post(handlers::task::task_invalidated))
         .route("/task/succeeded", post(handlers::task::task_completed))
         .route("/task/aborted", post(handlers::task::task_aborted))
         .route(

@@ -104,26 +104,6 @@ pub async fn task_failed(
     })
 }
 
-pub async fn task_invalidated(
-    State(state): State<AppState>,
-    Json(payload): Json<TaskRunUpdateRequest>,
-) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
-    service::task::invalidate_task(
-        &state,
-        payload.task_id,
-        payload.reason,
-        payload.log,
-        payload.concrete_scenarios_executed,
-    )
-    .await
-    .map(TaskResponse::from)
-    .map(Json)
-    .map_err(|e| {
-        let (status, msg): (StatusCode, &'static str) = e.into();
-        (status, msg)
-    })
-}
-
 pub async fn task_completed(
     State(state): State<AppState>,
     Json(payload): Json<TaskRunUpdateRequest>,

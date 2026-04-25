@@ -163,32 +163,6 @@ pub async fn complete_task(
     Ok(updated)
 }
 
-pub async fn invalidate_task(
-    state: &AppState,
-    task_id: i32,
-    reason: Option<String>,
-    log: Option<String>,
-    concrete_scenarios_executed: i32,
-) -> Result<task::Model, TaskServiceError> {
-    let reason = reason.unwrap_or_else(|| "task marked invalid".to_string());
-    println!(
-        "Invalidating task {} with reason: {} (concrete_scenarios_executed={})",
-        task_id, reason, concrete_scenarios_executed
-    );
-    let updated = db::task::invalidate_task(
-        &state.db,
-        task_id,
-        reason,
-        log,
-        concrete_scenarios_executed,
-    )
-    .await?;
-    let updated = match updated {
-        Some(t) => t,
-        None => return Err(TaskServiceError::NotFound("task not found")),
-    };
-    Ok(updated)
-}
 
 pub async fn fail_task(
     state: &AppState,
