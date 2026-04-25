@@ -10,17 +10,30 @@ use sea_orm_migration::prelude::{LockBehavior, LockType};
 
 /// Append a chunk to `task_run.log` without rewriting the entire column,
 /// and bump `last_heartbeat_at` so the reaper treats this run as alive.
-pub async fn append_log(db: &DatabaseConnection, run_id: i32, chunk: &str) -> Result<(), DbErr> {
-    db.execute(Statement::from_sql_and_values(
-        DbBackend::Postgres,
-        r#"UPDATE task_run
-           SET log = COALESCE(log, '') || $1,
-               last_heartbeat_at = now()
-           WHERE id = $2"#,
-        [chunk.into(), run_id.into()],
-    ))
-    .await?;
-    Ok(())
+/// Returns the byte length of `task_run.log` *after* the append, which
+/// is the inclusive end-offset of the newly written chunk. Callers
+/// piggy-back this on the SSE envelope so a Log Drawer subscriber that
+/// races the snapshot fetch can dedupe overlapping chunks instead of
+/// dropping them and silently truncating its view.
+pub async fn append_log(
+    db: &DatabaseConnection,
+    run_id: i32,
+    chunk: &str,
+) -> Result<i64, DbErr> {
+    let row = db
+        .query_one(Statement::from_sql_and_values(
+            DbBackend::Postgres,
+            r#"UPDATE task_run
+               SET log = COALESCE(log, '') || $1,
+                   last_heartbeat_at = now()
+               WHERE id = $2
+               RETURNING octet_length(log)::bigint AS end_offset"#,
+            [chunk.into(), run_id.into()],
+        ))
+        .await?
+        .ok_or_else(|| DbErr::RecordNotFound(format!("task_run {run_id}")))?;
+    let end_offset: i64 = row.try_get_by("end_offset")?;
+    Ok(end_offset)
 }
 
 /// Mark task_runs that are still in `running` but haven't sent a log chunk

@@ -47,14 +47,19 @@ pub async fn append_log(
 
     let chunk = std::str::from_utf8(&body)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("utf-8 required: {e}")))?;
-    db::task_run::append_log(&state.db, run_id, chunk)
+    let end_offset = db::task_run::append_log(&state.db, run_id, chunk)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    // `end_offset` = octet_length(task_run.log) after the append. Each
+    // chunk's [start, end] is therefore (end_offset - utf8_bytes(chunk),
+    // end_offset]. The Log Drawer uses this to dedupe chunks that
+    // arrive over SSE while it's still fetching the initial snapshot.
     let envelope = json!({
         "kind": "log",
         "task_run_id": run_id,
         "chunk": chunk,
+        "end_offset": end_offset,
     });
     let _ = state.events_tx.send(envelope.to_string());
 
