@@ -149,10 +149,7 @@ pub async fn complete_task(
     log: Option<String>,
     concrete_scenarios_executed: i32,
 ) -> Result<task::Model, TaskServiceError> {
-    println!(
-        "Completing task {} (concrete_scenarios_executed={})",
-        task_id, concrete_scenarios_executed
-    );
+    tracing::info!(task_id, concrete_scenarios_executed, "completing task");
     let updated =
         db::task::complete_task(&state.db, task_id, log, concrete_scenarios_executed).await?;
     let updated = match updated {
@@ -171,9 +168,11 @@ pub async fn fail_task(
     concrete_scenarios_executed: i32,
 ) -> Result<task::Model, TaskServiceError> {
     let reason = reason.unwrap_or_else(|| "task failed".to_string());
-    println!(
-        "Failing task {} with reason: {} (concrete_scenarios_executed={})",
-        task_id, reason, concrete_scenarios_executed
+    tracing::info!(
+        task_id,
+        %reason,
+        concrete_scenarios_executed,
+        "failing task"
     );
     let updated = db::task::fail_task(
         &state.db,
@@ -200,9 +199,11 @@ pub async fn abort_task(
     concrete_scenarios_executed: i32,
 ) -> Result<task::Model, TaskServiceError> {
     let reason = reason.unwrap_or_else(|| "task aborted".to_string());
-    println!(
-        "Aborting task {} with reason: {} (concrete_scenarios_executed={})",
-        task_id, reason, concrete_scenarios_executed
+    tracing::info!(
+        task_id,
+        %reason,
+        concrete_scenarios_executed,
+        "aborting task"
     );
     let updated =
         db::task_run::abort_task(&state.db, task_id, reason, log, concrete_scenarios_executed)
