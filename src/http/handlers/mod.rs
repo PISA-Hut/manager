@@ -3,6 +3,7 @@ pub mod bytes;
 pub mod config;
 pub mod events;
 pub mod executor;
+pub mod file_ops;
 pub mod health;
 pub mod log_stream;
 pub mod map;
