@@ -1,0 +1,7 @@
+[toolchain]
+# Pin to a specific stable so a new clippy release can't suddenly break
+# CI on PRs that haven't changed. Bump deliberately when we want to
+# pick up new lints / language features.
+channel = "1.94"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
