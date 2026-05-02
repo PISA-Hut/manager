@@ -1,7 +1,8 @@
-use axum::{Json, extract::State, http::StatusCode};
+use axum::{Json, extract::State};
 
 use crate::app_state::AppState;
 use crate::db;
+use crate::http::AppError;
 use crate::http::dto::task::{
     ClaimTaskRequest, ClaimTaskResponse, CreateTaskRequest, TaskResponse, TaskRunUpdateRequest,
 };
@@ -9,44 +10,26 @@ use crate::service;
 
 pub async fn list_tasks(
     State(state): State<AppState>,
-) -> Result<Json<Vec<TaskResponse>>, (StatusCode, &'static str)> {
-    let tasks = db::task::find_all(&state.db)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
-
+) -> Result<Json<Vec<TaskResponse>>, AppError> {
+    let tasks = db::task::find_all(&state.db).await?;
     Ok(Json(tasks.into_iter().map(TaskResponse::from).collect()))
 }
 
 pub async fn create_task(
     State(state): State<AppState>,
     Json(payload): Json<CreateTaskRequest>,
-) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
-    if !db::plan::plan_exists(&state.db, payload.plan_id)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
-    {
-        return Err((StatusCode::BAD_REQUEST, "Plan does not exist"));
+) -> Result<Json<TaskResponse>, AppError> {
+    if !db::plan::plan_exists(&state.db, payload.plan_id).await? {
+        return Err(AppError::bad_request("Plan does not exist"));
     }
-
-    if !db::av::av_exists(&state.db, payload.av_id)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
-    {
-        return Err((StatusCode::BAD_REQUEST, "AV does not exist"));
+    if !db::av::av_exists(&state.db, payload.av_id).await? {
+        return Err(AppError::bad_request("AV does not exist"));
     }
-
-    if !db::sampler::sampler_exists(&state.db, payload.sampler_id)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
-    {
-        return Err((StatusCode::BAD_REQUEST, "Sampler does not exist"));
+    if !db::sampler::sampler_exists(&state.db, payload.sampler_id).await? {
+        return Err(AppError::bad_request("Sampler does not exist"));
     }
-
-    if !db::simulator::simulator_exists(&state.db, payload.simulator_id)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?
-    {
-        return Err((StatusCode::BAD_REQUEST, "Simulator does not exist"));
+    if !db::simulator::simulator_exists(&state.db, payload.simulator_id).await? {
+        return Err(AppError::bad_request("Simulator does not exist"));
     }
 
     let task = db::task::create(
@@ -56,17 +39,15 @@ pub async fn create_task(
         payload.sampler_id,
         payload.simulator_id,
     )
-    .await
-    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "db error"))?;
-
+    .await?;
     Ok(Json(TaskResponse::from(task)))
 }
 
 pub async fn claim_task(
     State(state): State<AppState>,
     Json(req): Json<ClaimTaskRequest>,
-) -> Result<Json<Option<ClaimTaskResponse>>, StatusCode> {
-    service::task::claim_task_for_executor(
+) -> Result<Json<Option<ClaimTaskResponse>>, AppError> {
+    let resp = service::task::claim_task_for_executor(
         &state,
         req.executor_id,
         req.task_id,
@@ -76,22 +57,17 @@ pub async fn claim_task(
         req.simulator_id,
         req.sampler_id,
     )
-    .await
-    .map(Json)
-    .map_err(|e| {
-        let (status, _msg): (StatusCode, &'static str) = e.into();
-        status
-    })
+    .await?;
+    Ok(Json(resp))
 }
 
 /// `concrete_scenarios_executed` feeds the "ten useless runs in a row"
 /// permanent-fail heuristic. Negative counts make no sense and would
 /// silently bypass the `== 0` check, so reject them at the boundary
 /// rather than letting them reach the DB.
-fn validate_concrete_count(n: i32) -> Result<(), (StatusCode, &'static str)> {
+fn validate_concrete_count(n: i32) -> Result<(), AppError> {
     if n < 0 {
-        return Err((
-            StatusCode::BAD_REQUEST,
+        return Err(AppError::bad_request(
             "concrete_scenarios_executed must be >= 0",
         ));
     }
@@ -101,61 +77,46 @@ fn validate_concrete_count(n: i32) -> Result<(), (StatusCode, &'static str)> {
 pub async fn task_failed(
     State(state): State<AppState>,
     Json(payload): Json<TaskRunUpdateRequest>,
-) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
+) -> Result<Json<TaskResponse>, AppError> {
     validate_concrete_count(payload.concrete_scenarios_executed)?;
-    service::task::fail_task(
+    let updated = service::task::fail_task(
         &state,
         payload.task_id,
         payload.reason,
         payload.log,
         payload.concrete_scenarios_executed,
     )
-    .await
-    .map(TaskResponse::from)
-    .map(Json)
-    .map_err(|e| {
-        let (status, msg): (StatusCode, &'static str) = e.into();
-        (status, msg)
-    })
+    .await?;
+    Ok(Json(TaskResponse::from(updated)))
 }
 
 pub async fn task_completed(
     State(state): State<AppState>,
     Json(payload): Json<TaskRunUpdateRequest>,
-) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
+) -> Result<Json<TaskResponse>, AppError> {
     validate_concrete_count(payload.concrete_scenarios_executed)?;
-    service::task::complete_task(
+    let updated = service::task::complete_task(
         &state,
         payload.task_id,
         payload.log,
         payload.concrete_scenarios_executed,
     )
-    .await
-    .map(TaskResponse::from)
-    .map(Json)
-    .map_err(|e| {
-        let (status, msg): (StatusCode, &'static str) = e.into();
-        (status, msg)
-    })
+    .await?;
+    Ok(Json(TaskResponse::from(updated)))
 }
 
 pub async fn task_aborted(
     State(state): State<AppState>,
     Json(payload): Json<TaskRunUpdateRequest>,
-) -> Result<Json<TaskResponse>, (StatusCode, &'static str)> {
+) -> Result<Json<TaskResponse>, AppError> {
     validate_concrete_count(payload.concrete_scenarios_executed)?;
-    service::task::abort_task(
+    let updated = service::task::abort_task(
         &state,
         payload.task_id,
         payload.reason,
         payload.log,
         payload.concrete_scenarios_executed,
     )
-    .await
-    .map(TaskResponse::from)
-    .map(Json)
-    .map_err(|e| {
-        let (status, msg): (StatusCode, &'static str) = e.into();
-        (status, msg)
-    })
+    .await?;
+    Ok(Json(TaskResponse::from(updated)))
 }

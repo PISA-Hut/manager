@@ -1,16 +1,14 @@
-use axum::{Json, extract::State, http::StatusCode};
+use axum::{Json, extract::State};
 
 use crate::app_state::AppState;
 use crate::db;
+use crate::http::AppError;
 use crate::http::dto::simulator::{CreateSimulatorRequest, SimulatorResponse};
 
 pub async fn list_simulators(
     State(state): State<AppState>,
-) -> Result<Json<Vec<SimulatorResponse>>, StatusCode> {
-    let simulators = db::simulator::find_all(&state.db)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
+) -> Result<Json<Vec<SimulatorResponse>>, AppError> {
+    let simulators = db::simulator::find_all(&state.db).await?;
     Ok(Json(
         simulators
             .into_iter()
@@ -22,7 +20,7 @@ pub async fn list_simulators(
 pub async fn create_simulator(
     State(state): State<AppState>,
     Json(payload): Json<CreateSimulatorRequest>,
-) -> Result<Json<SimulatorResponse>, StatusCode> {
+) -> Result<Json<SimulatorResponse>, AppError> {
     let simulator_model = db::simulator::create(
         &state.db,
         payload.name,
@@ -31,8 +29,6 @@ pub async fn create_simulator(
         payload.carla_runtime,
         payload.ros_runtime,
     )
-    .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
+    .await?;
     Ok(Json(SimulatorResponse::from(simulator_model)))
 }
