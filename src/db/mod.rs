@@ -1,6 +1,7 @@
 pub mod av;
 pub mod config_bearing;
 pub mod executor;
+pub mod file_store;
 pub mod map;
 pub mod map_file;
 pub mod plan;
@@ -12,6 +13,7 @@ pub mod task;
 pub mod task_run;
 
 pub use config_bearing::ConfigBearing;
+pub use file_store::FileStore;
 
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;

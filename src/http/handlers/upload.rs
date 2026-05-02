@@ -8,6 +8,7 @@ use std::io::Read;
 
 use crate::app_state::AppState;
 use crate::db;
+use crate::entity::scenario_file;
 use crate::entity::sea_orm_active_enums::ScenarioFormat;
 use crate::http::AppError;
 use crate::http::handlers::bytes::sha256_hex;
@@ -263,12 +264,15 @@ pub async fn upload_scenarios(
         let mut file_error: Option<String> = None;
         for (rel_path, contents) in files {
             let sha = sha256_hex(&contents);
-            // `rel_path` is moved into the format! string on error so
-            // we read it before that point — keep the call below the
-            // sha computation.
-            let store = db::scenario_file::put(&state.db, scenario_id, rel_path, contents, sha)
-                .await
-                .map(|_| ());
+            let store = <scenario_file::Model as crate::db::FileStore>::put(
+                &state.db,
+                scenario_id,
+                rel_path,
+                contents,
+                sha,
+            )
+            .await
+            .map(|_| ());
             if let Err(e) = store {
                 file_error = Some(format!("Failed to store file: {e}"));
                 break;
