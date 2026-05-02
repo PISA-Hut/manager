@@ -35,29 +35,5 @@ pub async fn get_by_id(db: &DatabaseConnection, av_id: i32) -> Result<Option<av:
     av::Entity::find_by_id(av_id).one(db).await
 }
 
-pub async fn set_config(
-    db: &DatabaseConnection,
-    av_id: i32,
-    content: Vec<u8>,
-    content_sha256: String,
-) -> Result<av::Model, DbErr> {
-    let existing = av::Entity::find_by_id(av_id)
-        .one(db)
-        .await?
-        .ok_or(DbErr::RecordNotFound(format!("av {} not found", av_id)))?;
-    let mut am: av::ActiveModel = existing.into();
-    am.config = Set(Some(content));
-    am.config_sha256 = Set(Some(content_sha256));
-    am.update(db).await
-}
-
-pub async fn clear_config(db: &DatabaseConnection, av_id: i32) -> Result<av::Model, DbErr> {
-    let existing = av::Entity::find_by_id(av_id)
-        .one(db)
-        .await?
-        .ok_or(DbErr::RecordNotFound(format!("av {} not found", av_id)))?;
-    let mut am: av::ActiveModel = existing.into();
-    am.config = Set(None);
-    am.config_sha256 = Set(None);
-    am.update(db).await
-}
+// `set_config` and `clear_config` are now provided generically via the
+// `db::ConfigBearing` trait impl on `av::Model` (see config_bearing.rs).

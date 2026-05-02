@@ -1,4 +1,5 @@
 pub mod av;
+pub mod config_bearing;
 pub mod executor;
 pub mod map;
 pub mod map_file;
@@ -9,6 +10,8 @@ pub mod scenario_file;
 pub mod simulator;
 pub mod task;
 pub mod task_run;
+
+pub use config_bearing::ConfigBearing;
 
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use sea_orm_migration::MigratorTrait;
