@@ -1,16 +1,14 @@
-use axum::{Json, extract::State, http::StatusCode};
+use axum::{Json, extract::State};
 
 use crate::app_state::AppState;
 use crate::db;
+use crate::http::AppError;
 use crate::http::dto::sampler::{CreateSamplerRequest, SamplerResponse};
 
 pub async fn list_samplers(
     State(state): State<AppState>,
-) -> Result<Json<Vec<SamplerResponse>>, StatusCode> {
-    let samplers = db::sampler::find_all(&state.db)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
+) -> Result<Json<Vec<SamplerResponse>>, AppError> {
+    let samplers = db::sampler::find_all(&state.db).await?;
     Ok(Json(
         samplers.into_iter().map(SamplerResponse::from).collect(),
     ))
@@ -19,10 +17,7 @@ pub async fn list_samplers(
 pub async fn create_sampler(
     State(state): State<AppState>,
     Json(payload): Json<CreateSamplerRequest>,
-) -> Result<Json<SamplerResponse>, StatusCode> {
-    let sampler_model = db::sampler::create(&state.db, payload.name, payload.module_path)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
+) -> Result<Json<SamplerResponse>, AppError> {
+    let sampler_model = db::sampler::create(&state.db, payload.name, payload.module_path).await?;
     Ok(Json(SamplerResponse::from(sampler_model)))
 }

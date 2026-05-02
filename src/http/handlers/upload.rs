@@ -1,7 +1,6 @@
 use axum::{
     Json,
     extract::{Multipart, State},
-    http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,6 +9,7 @@ use std::io::Read;
 use crate::app_state::AppState;
 use crate::db;
 use crate::entity::sea_orm_active_enums::ScenarioFormat;
+use crate::http::AppError;
 use crate::http::handlers::bytes::sha256_hex;
 
 #[derive(Deserialize)]
@@ -79,14 +79,14 @@ fn detect_wrapper_dir(entry_paths: &[std::path::PathBuf]) -> Option<String> {
 pub async fn upload_scenarios(
     State(state): State<AppState>,
     mut multipart: Multipart,
-) -> Result<Json<UploadResult>, (StatusCode, String)> {
+) -> Result<Json<UploadResult>, AppError> {
     let mut zip_bytes: Option<Vec<u8>> = None;
     let mut format = ScenarioFormat::OpenScenario1;
 
     while let Some(field) = multipart
         .next_field()
         .await
-        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Multipart error: {e}")))?
+        .map_err(|e| AppError::bad_request(format!("Multipart error: {e}")))?
     {
         let name = field.name().unwrap_or("").to_string();
         match name.as_str() {
@@ -95,25 +95,21 @@ pub async fn upload_scenarios(
                     field
                         .bytes()
                         .await
-                        .map_err(|e| {
-                            (StatusCode::BAD_REQUEST, format!("Failed to read file: {e}"))
-                        })?
+                        .map_err(|e| AppError::bad_request(format!("Failed to read file: {e}")))?
                         .to_vec(),
                 );
             }
             "format" => {
-                let text = field.text().await.map_err(|e| {
-                    (
-                        StatusCode::BAD_REQUEST,
-                        format!("Failed to read format: {e}"),
-                    )
-                })?;
+                let text = field
+                    .text()
+                    .await
+                    .map_err(|e| AppError::bad_request(format!("Failed to read format: {e}")))?;
                 format = match text.as_str() {
                     "open_scenario1" => ScenarioFormat::OpenScenario1,
                     "open_scenario2" => ScenarioFormat::OpenScenario2,
                     "carla_lb_route" => ScenarioFormat::CarlaLbRoute,
                     _ => {
-                        return Err((StatusCode::BAD_REQUEST, format!("Unknown format: {text}")));
+                        return Err(AppError::bad_request(format!("Unknown format: {text}")));
                     }
                 };
             }
@@ -121,14 +117,14 @@ pub async fn upload_scenarios(
         }
     }
 
-    let zip_bytes = zip_bytes.ok_or((StatusCode::BAD_REQUEST, "No file uploaded".to_string()))?;
+    let zip_bytes = zip_bytes.ok_or_else(|| AppError::bad_request("No file uploaded"))?;
 
     // Pass 0: enumerate entry paths so we can detect an optional top-level
     // wrapper dir (`00-2/<scenario>/…` vs. `<scenario>/…`).
     let entry_paths: Vec<std::path::PathBuf> = {
         let cursor = std::io::Cursor::new(&zip_bytes);
         let mut archive = zip::ZipArchive::new(cursor)
-            .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid zip file: {e}")))?;
+            .map_err(|e| AppError::bad_request(format!("Invalid zip file: {e}")))?;
         (0..archive.len())
             .filter_map(|i| {
                 let f = archive.by_index(i).ok()?;
@@ -148,12 +144,12 @@ pub async fn upload_scenarios(
     {
         let cursor = std::io::Cursor::new(&zip_bytes);
         let mut archive = zip::ZipArchive::new(cursor)
-            .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid zip file: {e}")))?;
+            .map_err(|e| AppError::bad_request(format!("Invalid zip file: {e}")))?;
 
         for i in 0..archive.len() {
             let mut file = archive
                 .by_index(i)
-                .map_err(|e| (StatusCode::BAD_REQUEST, format!("Zip read error: {e}")))?;
+                .map_err(|e| AppError::bad_request(format!("Zip read error: {e}")))?;
 
             if file.is_dir() {
                 continue;
@@ -171,18 +167,14 @@ pub async fn upload_scenarios(
 
             let mut contents = Vec::new();
             file.read_to_end(&mut contents).map_err(|e| {
-                (
-                    StatusCode::BAD_REQUEST,
-                    format!("Failed to read {rel_path} in {folder_name}: {e}"),
-                )
+                AppError::bad_request(format!("Failed to read {rel_path} in {folder_name}: {e}"))
             })?;
 
             if rel_path == "spec.yaml" {
                 let spec: SpecYaml = serde_yaml::from_slice(&contents).map_err(|e| {
-                    (
-                        StatusCode::BAD_REQUEST,
-                        format!("Failed to parse spec.yaml in {folder_name}: {e}"),
-                    )
+                    AppError::bad_request(format!(
+                        "Failed to parse spec.yaml in {folder_name}: {e}"
+                    ))
                 })?;
                 specs.insert(folder_name.clone(), spec);
             }
