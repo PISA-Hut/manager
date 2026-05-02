@@ -1,0 +1,4 @@
+# Service-layer functions like `claim_task_for_executor` legitimately take ~7
+# args (executor + task_id + four optional resolution hints). The default
+# threshold of 7 trips on these without flagging anything actionable.
+too-many-arguments-threshold = 10

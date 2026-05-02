@@ -22,11 +22,7 @@ use sea_orm_migration::prelude::{LockBehavior, LockType};
 /// handler is racy with concurrent finalisation; this is the lock.
 /// Surfaces as `RecordNotFound` when the row exists but is not running,
 /// which the handler maps to 410 Gone just like a missing row.
-pub async fn append_log(
-    db: &DatabaseConnection,
-    run_id: i32,
-    chunk: &str,
-) -> Result<i64, DbErr> {
+pub async fn append_log(db: &DatabaseConnection, run_id: i32, chunk: &str) -> Result<i64, DbErr> {
     let row = db
         .query_one(Statement::from_sql_and_values(
             DbBackend::Postgres,

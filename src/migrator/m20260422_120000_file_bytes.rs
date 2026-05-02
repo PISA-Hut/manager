@@ -54,7 +54,11 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(ScenarioFile::ScenarioId).integer().not_null())
+                    .col(
+                        ColumnDef::new(ScenarioFile::ScenarioId)
+                            .integer()
+                            .not_null(),
+                    )
                     .col(
                         ColumnDef::new(ScenarioFile::RelativePath)
                             .string()

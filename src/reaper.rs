@@ -32,9 +32,10 @@ fn read_env_secs(name: &str, default: i64) -> i64 {
 
 pub fn spawn(db: DatabaseConnection) {
     let stale_after = read_env_secs("REAPER_STALE_SECS", DEFAULT_STALE_AFTER_SECS);
-    let poll_interval = Duration::from_secs(
-        read_env_secs("REAPER_INTERVAL_SECS", DEFAULT_POLL_INTERVAL_SECS as i64) as u64,
-    );
+    let poll_interval = Duration::from_secs(read_env_secs(
+        "REAPER_INTERVAL_SECS",
+        DEFAULT_POLL_INTERVAL_SECS as i64,
+    ) as u64);
     info!(
         "reaper: spawning with stale_after={}s, poll_interval={:?}",
         stale_after, poll_interval

@@ -73,7 +73,12 @@ impl MigrationTrait for Migration {
             .alter_table(
                 Table::alter()
                     .table(Simulator::Table)
-                    .add_column(ColumnDef::new(Simulator::ConfigPath).string().not_null().default(""))
+                    .add_column(
+                        ColumnDef::new(Simulator::ConfigPath)
+                            .string()
+                            .not_null()
+                            .default(""),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -81,7 +86,12 @@ impl MigrationTrait for Migration {
             .alter_table(
                 Table::alter()
                     .table(AV::Table)
-                    .add_column(ColumnDef::new(AV::ConfigPath).string().not_null().default(""))
+                    .add_column(
+                        ColumnDef::new(AV::ConfigPath)
+                            .string()
+                            .not_null()
+                            .default(""),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -89,7 +99,12 @@ impl MigrationTrait for Migration {
             .alter_table(
                 Table::alter()
                     .table(Scenario::Table)
-                    .add_column(ColumnDef::new(Scenario::ScenarioPath).string().not_null().default(""))
+                    .add_column(
+                        ColumnDef::new(Scenario::ScenarioPath)
+                            .string()
+                            .not_null()
+                            .default(""),
+                    )
                     .to_owned(),
             )
             .await?;

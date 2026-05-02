@@ -416,6 +416,10 @@ enum Map {
     OsmPath,
 }
 
+// DeriveIden variants must spell out actual SQL column names; clippy's
+// enum-variant-names lint sees the table-name prefix as redundant, but
+// the names are load-bearing for the migration's CREATE TABLE statements.
+#[allow(clippy::enum_variant_names)]
 #[derive(DeriveIden)]
 enum Scenario {
     Table,
@@ -446,6 +450,7 @@ enum Plan {
     ScenarioId,
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(DeriveIden)]
 enum Task {
     Table,
@@ -476,6 +481,7 @@ enum TaskStatus {
     Invalid,
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(DeriveIden)]
 enum TaskRun {
     Table,
